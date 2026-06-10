@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, desc, eq, lt, or } from 'drizzle-orm';
+import { and, asc, desc, eq, lt, or, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { fotos } from '@/server/db/schema';
 import { deleteFoto, uploadFoto } from './drive';
@@ -89,6 +89,27 @@ export async function listarFotos(input: ListarFotosInput) {
       : null;
 
   return { items, nextCursor };
+}
+
+export async function listarFotosCronologicas() {
+  return db
+    .select()
+    .from(fotos)
+    .orderBy(
+      asc(sql`coalesce(${fotos.tiradaEm}, ${fotos.uploadedAt})`),
+      asc(fotos.id),
+    );
+}
+
+export async function listarFotosPorDataTirada() {
+  return db
+    .select()
+    .from(fotos)
+    .orderBy(
+      sql`${fotos.tiradaEm} desc nulls last`,
+      desc(fotos.uploadedAt),
+      desc(fotos.id),
+    );
 }
 
 export async function obterFoto(id: string) {

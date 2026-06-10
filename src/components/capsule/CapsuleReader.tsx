@@ -1,6 +1,7 @@
 'use client';
 
 import { Unlock, X } from 'lucide-react';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 import type { CapAberta } from './types';
 
 export function CapsuleReader({
@@ -13,7 +14,7 @@ export function CapsuleReader({
   onClose: () => void;
 }) {
   return (
-    <div className="modal-veil" onClick={onClose}>
+    <ModalPortal onClose={onClose}>
       <div
         className="modal card pop-in"
         onClick={(e) => e.stopPropagation()}
@@ -48,15 +49,29 @@ export function CapsuleReader({
               abrindo a cápsula…
             </p>
           ) : (
-            <p
-              className="serif-note"
-              style={{ fontSize: 24, color: 'var(--ink)', lineHeight: 1.5, margin: 0 }}
-            >
-              {cap.conteudo}
-            </p>
+            <>
+              <p
+                className="serif-note"
+                style={{ fontSize: 24, color: 'var(--ink)', lineHeight: 1.5, margin: 0 }}
+              >
+                {cap.conteudo}
+              </p>
+              {cap.fotos && cap.fotos.length > 0 && (
+                <div className="capsule-photo-grid">
+                  {cap.fotos.map((foto) => (
+                    <div key={foto.id} className="capsule-photo">
+                      <img
+                        src={`/api/capsulas/${cap.id}/fotos/${foto.id}/binario`}
+                        alt={foto.legenda ?? 'foto da cápsula'}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 }

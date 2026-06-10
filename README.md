@@ -97,6 +97,13 @@ SESSION_SECRET=          # openssl rand -hex 32
 
 Cole `drizzle/migrations/0000_init.sql` no SQL Editor do Supabase (tabelas + triggers + RLS). Alternativa em dev: `pnpm db:push`.
 
+Se o banco ja recebeu a `0000_init.sql` manualmente e voce quer continuar usando migrations versionadas, rode uma vez:
+
+```bash
+pnpm db:baseline
+pnpm db:migrate
+```
+
 ### 4. Google Drive (OAuth pessoal)
 
 Os arquivos ficam na **sua** conta Google (15 GB grátis), não numa Service Account.
@@ -159,6 +166,7 @@ pnpm typecheck    # tsc --noEmit
 pnpm test         # vitest
 
 pnpm db:push      # aplica schema (dev)
+pnpm db:baseline  # registra 0000_init ja aplicada em banco existente
 pnpm db:migrate   # migrations versionadas
 pnpm db:studio    # Drizzle Studio
 

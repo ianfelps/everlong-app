@@ -14,7 +14,13 @@ export async function GET(
     const { id } = await params;
     const row = await obterCapsula(id);
     if (!row) throw errors.notFound('cápsula não encontrada');
-    return row;
+    return {
+      ...row,
+      fotos: row.fotos.map((foto) => ({
+        ...foto,
+        tamanhoBytes: foto.tamanhoBytes.toString(),
+      })),
+    };
   });
 }
 

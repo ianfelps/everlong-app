@@ -1,11 +1,11 @@
-import { listarFotos } from '@/server/services/fotos';
+import { listarFotosPorDataTirada } from '@/server/services/fotos';
 import { AlbumGrid } from '@/components/album/AlbumGrid';
 import type { FotoItem } from '@/components/album/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AlbumPage() {
-  const { items } = await listarFotos({ limit: 60 });
+  const items = await listarFotosPorDataTirada();
   const fotos: FotoItem[] = items.map((f) => ({
     id: f.id,
     legenda: f.legenda,

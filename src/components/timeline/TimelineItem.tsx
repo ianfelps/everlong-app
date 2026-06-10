@@ -6,12 +6,20 @@ import { MetalSphere } from '@/components/brand/MetalSphere';
 import { EventModal } from './EventModal';
 import { dataCurta } from '@/lib/format';
 
-export type TimelineEvent = {
-  id: string;
-  titulo: string;
-  descricao: string | null;
-  dataEvento: string;
-};
+export type TimelineEvent =
+  | {
+      type: 'event';
+      id: string;
+      titulo: string;
+      descricao: string | null;
+      dataEvento: string;
+    }
+  | {
+      type: 'photo';
+      id: string;
+      legenda: string | null;
+      dataEvento: string;
+    };
 
 export function TimelineItem({
   ev,
@@ -53,24 +61,36 @@ export function TimelineItem({
         transitionDelay: `${(index % 2) * 0.05}s`,
       }}
     >
-      <button
-        type="button"
-        className="tl-bubble card-metal-edge"
-        onClick={() => setEditar(true)}
-        title="Editar marco"
-      >
-        <span className="tl-edit">
-          <Pencil size={13} />
-        </span>
-        <div className="tl-date">{dataCurta(ev.dataEvento)}</div>
-        <h4>{ev.titulo}</h4>
-        {ev.descricao && <p>{ev.descricao}</p>}
-      </button>
+      {ev.type === 'event' ? (
+        <button
+          type="button"
+          className="tl-bubble card-metal-edge"
+          onClick={() => setEditar(true)}
+          title="Editar marco"
+        >
+          <span className="tl-edit">
+            <Pencil size={13} />
+          </span>
+          <div className="tl-date">{dataCurta(ev.dataEvento)}</div>
+          <h4>{ev.titulo}</h4>
+          {ev.descricao && <p>{ev.descricao}</p>}
+        </button>
+      ) : (
+        <div className="tl-bubble tl-photo-bubble card-metal-edge">
+          <img
+            src={`/api/fotos/${ev.id}/binario`}
+            alt={ev.legenda ?? 'foto registrada na linha do tempo'}
+            className="tl-photo"
+          />
+          <div className="tl-date">{dataCurta(ev.dataEvento)}</div>
+          <h4>{ev.legenda ?? 'Foto registrada'}</h4>
+        </div>
+      )}
       <span className="tl-node">
         <MetalSphere size={42} />
       </span>
 
-      {editar && (
+      {editar && ev.type === 'event' && (
         <EventModal
           mode="edit"
           initial={{

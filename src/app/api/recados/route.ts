@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { desc } from 'drizzle-orm';
+import { asc, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/server/db';
 import { recados } from '@/server/db/schema';
@@ -16,10 +16,19 @@ const createSchema = z.object({
   rotacao: z.number().int().min(-180).max(180).optional(),
 });
 
-export async function GET() {
+const querySchema = z.object({
+  order: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export async function GET(req: NextRequest) {
   return handle(async () => {
     await requireSession();
-    return db.select().from(recados).orderBy(desc(recados.createdAt));
+    const url = new URL(req.url);
+    const q = querySchema.parse(Object.fromEntries(url.searchParams));
+    return db
+      .select()
+      .from(recados)
+      .orderBy(q.order === 'asc' ? asc(recados.createdAt) : desc(recados.createdAt));
   });
 }
 

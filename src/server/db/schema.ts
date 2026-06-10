@@ -135,6 +135,27 @@ export const capsulas = pgTable(
   ],
 );
 
+export const capsulaFotos = pgTable(
+  'capsula_fotos',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    capsulaId: uuid('capsula_id')
+      .notNull()
+      .references(() => capsulas.id, { onDelete: 'cascade' }),
+    driveFileId: text('drive_file_id').notNull().unique(),
+    mimeType: text('mime_type').notNull(),
+    tamanhoBytes: bigint('tamanho_bytes', { mode: 'bigint' }).notNull(),
+    legenda: text('legenda'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('idx_capsula_fotos_capsula').on(t.capsulaId),
+    index('idx_capsula_fotos_created').on(t.createdAt),
+  ],
+);
+
 export const recados = pgTable(
   'recados',
   {
@@ -167,6 +188,8 @@ export type Evento = typeof eventos.$inferSelect;
 export type NovoEvento = typeof eventos.$inferInsert;
 export type Capsula = typeof capsulas.$inferSelect;
 export type NovaCapsula = typeof capsulas.$inferInsert;
+export type CapsulaFoto = typeof capsulaFotos.$inferSelect;
+export type NovaCapsulaFoto = typeof capsulaFotos.$inferInsert;
 export type Recado = typeof recados.$inferSelect;
 export type NovoRecado = typeof recados.$inferInsert;
 export type ConfigCasal = typeof configCasal.$inferSelect;

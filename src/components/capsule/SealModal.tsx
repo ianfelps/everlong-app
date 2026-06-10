@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { X, Lock } from 'lucide-react';
-import { apiJson, ApiClientError } from '@/lib/api';
+import { useRef, useState } from 'react';
+import { X, Lock, ImagePlus } from 'lucide-react';
+import { apiForm, ApiClientError } from '@/lib/api';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 
 export function SealModal({
   onClose,
@@ -14,19 +15,28 @@ export function SealModal({
   const [titulo, setTitulo] = useState('');
   const [conteudo, setConteudo] = useState('');
   const [quando, setQuando] = useState('');
+  const [fotos, setFotos] = useState<File[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function adicionarFotos(list: FileList | null | undefined) {
+    if (!list) return;
+    setFotos((atuais) => [...atuais, ...Array.from(list)]);
+    setErro(null);
+  }
 
   async function selar() {
     if (!titulo.trim() || !conteudo.trim() || !quando) return;
     setEnviando(true);
     setErro(null);
     try {
-      await apiJson('/api/capsulas', 'POST', {
-        titulo: titulo.trim(),
-        conteudo: conteudo.trim(),
-        data_desbloqueio: new Date(quando).toISOString(),
-      });
+      const form = new FormData();
+      form.set('titulo', titulo.trim());
+      form.set('conteudo', conteudo.trim());
+      form.set('data_desbloqueio', new Date(quando).toISOString());
+      fotos.forEach((foto) => form.append('fotos', foto));
+      await apiForm('/api/capsulas', form);
       onSealed();
       onClose();
     } catch (e) {
@@ -36,7 +46,7 @@ export function SealModal({
   }
 
   return (
-    <div className="modal-veil" onClick={onClose}>
+    <ModalPortal onClose={onClose}>
       <div className="modal card pop-in" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h3>Selar nova mensagem</h3>
@@ -71,6 +81,39 @@ export function SealModal({
               onChange={(e) => setQuando(e.target.value)}
             />
           </div>
+          <div className="field">
+            <label>Fotos</label>
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp,image/heic"
+              style={{ display: 'none' }}
+              onChange={(e) => adicionarFotos(e.target.files)}
+            />
+            <button
+              type="button"
+              className="btn btn-metal"
+              onClick={() => inputRef.current?.click()}
+            >
+              <ImagePlus size={16} /> Adicionar fotos
+            </button>
+            {fotos.length > 0 && (
+              <div className="capsule-files">
+                {fotos.map((foto, i) => (
+                  <span key={`${foto.name}-${foto.size}-${i}`}>
+                    {foto.name}
+                    <button
+                      type="button"
+                      onClick={() => setFotos((atuais) => atuais.filter((_, idx) => idx !== i))}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
           {erro && <div className="login-error">{erro}</div>}
         </div>
         <div className="modal-foot">
@@ -86,6 +129,6 @@ export function SealModal({
           </button>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 }
