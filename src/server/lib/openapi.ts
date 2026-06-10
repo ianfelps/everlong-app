@@ -102,13 +102,30 @@ export const openapiSpec = {
           abertaEm: { type: 'string', format: 'date-time', nullable: true },
         },
       },
+      CapsulaFoto: {
+        type: 'object',
+        required: ['id', 'mimeType', 'tamanhoBytes', 'createdAt'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          mimeType: { type: 'string' },
+          tamanhoBytes: { type: 'string', description: 'bigint serializado' },
+          legenda: { type: 'string', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
       CapsulaAberta: {
         allOf: [
           { $ref: '#/components/schemas/CapsulaMetadata' },
           {
             type: 'object',
             required: ['conteudo'],
-            properties: { conteudo: { type: 'string' } },
+            properties: {
+              conteudo: { type: 'string' },
+              fotos: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/CapsulaFoto' },
+              },
+            },
           },
         ],
       },
@@ -213,6 +230,22 @@ export const openapiSpec = {
                 properties: {
                   perfil_id: { type: 'string', format: 'uuid' },
                   senha: { type: 'string' },
+                },
+              },
+            },
+            'multipart/form-data': {
+              schema: {
+                type: 'object',
+                required: ['titulo', 'conteudo', 'data_desbloqueio'],
+                properties: {
+                  titulo: { type: 'string' },
+                  conteudo: { type: 'string' },
+                  data_desbloqueio: { type: 'string', format: 'date-time' },
+                  destinatario_id: { type: 'string', format: 'uuid', nullable: true },
+                  fotos: {
+                    type: 'array',
+                    items: { type: 'string', format: 'binary' },
+                  },
                 },
               },
             },
@@ -563,10 +596,36 @@ export const openapiSpec = {
         responses: { 204: { $ref: '#/components/responses/NoContent' }, 404: { $ref: '#/components/responses/NotFound' } },
       },
     },
+    '/api/capsulas/{id}/fotos/{fotoId}/binario': {
+      get: {
+        tags: ['capsulas'],
+        summary: 'Stream de foto de cápsula desbloqueada',
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+          { name: 'fotoId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          200: {
+            description: 'Binário da imagem',
+            content: { 'image/*': { schema: { type: 'string', format: 'binary' } } },
+          },
+          423: { description: 'Locked' },
+          404: { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
     '/api/recados': {
       get: {
         tags: ['recados'],
         security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            name: 'order',
+            in: 'query',
+            schema: { type: 'string', enum: ['desc', 'asc'], default: 'desc' },
+          },
+        ],
         responses: {
           200: { description: 'Lista', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Recado' } } } } },
         },

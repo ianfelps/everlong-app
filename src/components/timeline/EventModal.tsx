@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Check, Trash2 } from 'lucide-react';
 import { apiJson, ApiClientError } from '@/lib/api';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 
 export type EventData = {
   id: string;
@@ -74,7 +75,7 @@ export function EventModal({
   }
 
   return (
-    <div className="modal-veil" onClick={onClose}>
+    <ModalPortal onClose={onClose}>
       <div className="modal card pop-in" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h3>{mode === 'create' ? 'Novo marco' : 'Editar marco'}</h3>
@@ -139,6 +140,6 @@ export function EventModal({
           </div>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 }

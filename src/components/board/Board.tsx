@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Send } from 'lucide-react';
+import { ArrowDown, ArrowUp, Send } from 'lucide-react';
 import { apiGet, apiJson, ApiClientError } from '@/lib/api';
 import { CORES_RECADO, hexDaCor } from '@/lib/colors';
 import { tempoRelativo } from '@/lib/format';
@@ -18,6 +18,7 @@ type RecadoRow = {
 
 const POLL_MS = 10_000;
 const rndRot = () => Math.round(Math.random() * 8 - 4);
+type Ordem = 'desc' | 'asc';
 
 export function Board({
   inicial,
@@ -31,11 +32,12 @@ export function Board({
   const [notes, setNotes] = useState<RecadoRow[]>(inicial);
   const [text, setText] = useState('');
   const [cor, setCor] = useState(CORES_RECADO[0]!.nome);
+  const [ordem, setOrdem] = useState<Ordem>('desc');
   const conhecidos = useRef(new Set(inicial.map((n) => n.id)));
 
   const sincronizar = useCallback(async () => {
     try {
-      const rows = await apiGet<RecadoRow[]>('/api/recados');
+      const rows = await apiGet<RecadoRow[]>(`/api/recados?order=${ordem}`);
       setNotes((prev) => {
         const rotPorId = new Map(prev.map((n) => [n.id, n.rotacao]));
         return rows.map((r) => ({
@@ -48,9 +50,10 @@ export function Board({
     } catch {
       
     }
-  }, [meuId]);
+  }, [meuId, ordem]);
 
   useEffect(() => {
+    void sincronizar();
     const t = setInterval(sincronizar, POLL_MS);
     return () => clearInterval(t);
   }, [sincronizar]);
@@ -67,7 +70,7 @@ export function Board({
       rotacao,
       createdAt: new Date().toISOString(),
     };
-    setNotes((n) => [otimista, ...n]);
+    setNotes((n) => (ordem === 'desc' ? [otimista, ...n] : [...n, otimista]));
     setText('');
     try {
       const row = await apiJson<RecadoRow>('/api/recados', 'POST', {
@@ -92,6 +95,22 @@ export function Board({
         <p className="page-sub">
           deixe um bilhete onde o outro vai sorrir ao encontrar. Os recados aparecem para os dois.
         </p>
+        <div className="board-filters" aria-label="Ordenar recados">
+          <button
+            type="button"
+            className={ordem === 'desc' ? 'on' : ''}
+            onClick={() => setOrdem('desc')}
+          >
+            <ArrowDown size={15} /> Recentes
+          </button>
+          <button
+            type="button"
+            className={ordem === 'asc' ? 'on' : ''}
+            onClick={() => setOrdem('asc')}
+          >
+            <ArrowUp size={15} /> Antigos
+          </button>
+        </div>
       </div>
 
       <div className="board-canvas">

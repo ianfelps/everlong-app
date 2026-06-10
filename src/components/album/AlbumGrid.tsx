@@ -1,9 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Plus, Heart } from 'lucide-react';
-import { PhotoImage } from './PhotoImage';
 import { UploadModal } from './UploadModal';
 import { Lightbox } from './Lightbox';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -11,14 +10,58 @@ import { mesAno } from '@/lib/format';
 import type { FotoItem } from './types';
 
 const POEMA_ALBUM = 'guardar a luz de um dia comum até ele virar lembrança';
-const ALTURAS = [240, 300, 200, 340, 260, 290];
+const MASONRY_ROW = 8;
 
-function alturaCard(f: FotoItem, i: number): number {
-  if (f.largura && f.altura && f.largura > 0) {
-    const h = Math.round((260 * f.altura) / f.largura);
-    return Math.min(420, Math.max(180, h));
-  }
-  return ALTURAS[i % ALTURAS.length]!;
+function AlbumPhotoCard({
+  foto,
+  onOpen,
+}: {
+  foto: FotoItem;
+  onOpen: (foto: FotoItem) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [span, setSpan] = useState(32);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const medir = () => {
+      const grid = el.parentElement;
+      const styles = grid ? window.getComputedStyle(grid) : null;
+      const rowGap = styles ? parseFloat(styles.rowGap || '0') : 0;
+      const height = el.getBoundingClientRect().height;
+      const next = Math.ceil((height + rowGap) / (MASONRY_ROW + rowGap));
+      setSpan(Math.max(1, next));
+    };
+
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [foto.id]);
+
+  return (
+    <div
+      ref={ref}
+      className="photo-card pop-in"
+      style={{ gridRowEnd: `span ${span}` }}
+      onClick={() => onOpen(foto)}
+    >
+      <button className="like" onClick={(e) => e.stopPropagation()}>
+        <Heart size={15} color="var(--red)" />
+      </button>
+      <img
+        src={`/api/fotos/${foto.id}/binario`}
+        alt={foto.legenda ?? 'foto do álbum'}
+        className="album-photo"
+      />
+      <div className="photo-meta">
+        <div className="photo-cap">{foto.legenda ?? 'Uma lembrança nossa.'}</div>
+        <div className="photo-date">{mesAno(foto.tiradaEm ?? foto.uploadedAt)}</div>
+      </div>
+    </div>
+  );
 }
 
 export function AlbumGrid({ fotos }: { fotos: FotoItem[] }) {
@@ -69,17 +112,8 @@ export function AlbumGrid({ fotos }: { fotos: FotoItem[] }) {
         />
       ) : (
         <div className="masonry">
-          {filtradas.map((f, i) => (
-            <div key={f.id} className="photo-card pop-in" onClick={() => setLightbox(f)}>
-              <button className="like" onClick={(e) => e.stopPropagation()}>
-                <Heart size={15} color="var(--red)" />
-              </button>
-              <PhotoImage id={f.id} legenda={f.legenda} style={{ height: alturaCard(f, i) }} />
-              <div className="photo-meta">
-                <div className="photo-cap">{f.legenda ?? 'Uma lembrança nossa.'}</div>
-                <div className="photo-date">{mesAno(f.tiradaEm ?? f.uploadedAt)}</div>
-              </div>
-            </div>
+          {filtradas.map((f) => (
+            <AlbumPhotoCard key={f.id} foto={f} onOpen={setLightbox} />
           ))}
         </div>
       )}

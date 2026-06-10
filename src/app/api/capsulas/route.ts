@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { handle } from '@/server/lib/http';
+import { errors, handle } from '@/server/lib/http';
 import { requireSession } from '@/server/lib/session';
 import { criarCapsula, listarCapsulas } from '@/server/services/capsulas';
+import { FotoLimits } from '@/server/services/fotos';
 
 export const runtime = 'nodejs';
 
@@ -23,6 +24,37 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   return handle(async () => {
     const session = await requireSession();
+    const contentType = req.headers.get('content-type') ?? '';
+
+    if (contentType.includes('multipart/form-data')) {
+      const form = await req.formData();
+      const fotos = form.getAll('fotos');
+      const files = fotos.filter((item): item is File => item instanceof File && item.size > 0);
+
+      for (const file of files) {
+        if (!FotoLimits.ALLOWED.has(file.type)) throw errors.unsupportedMedia();
+        if (file.size > FotoLimits.MAX_BYTES) throw errors.tooLarge();
+      }
+
+      const body = createSchema.parse({
+        titulo: form.get('titulo'),
+        conteudo: form.get('conteudo'),
+        data_desbloqueio: form.get('data_desbloqueio'),
+        destinatario_id: form.get('destinatario_id') || undefined,
+      });
+
+      const row = await criarCapsula({
+        autorId: session.perfilId,
+        destinatarioId: body.destinatario_id ?? null,
+        titulo: body.titulo,
+        conteudo: body.conteudo,
+        dataDesbloqueio: new Date(body.data_desbloqueio),
+        fotos: files,
+      });
+
+      return NextResponse.json(row, { status: 201 });
+    }
+
     const body = createSchema.parse(await req.json());
     const row = await criarCapsula({
       autorId: session.perfilId,

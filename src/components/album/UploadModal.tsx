@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { Upload, X, Check } from 'lucide-react';
 import { apiForm, ApiClientError } from '@/lib/api';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 
 export function UploadModal({
   onClose,
@@ -51,7 +52,7 @@ export function UploadModal({
   const stage = file ? 'preview' : 'drop';
 
   return (
-    <div className="modal-veil" onClick={onClose}>
+    <ModalPortal onClose={onClose}>
       <div className="modal card pop-in" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h3>Adicionar foto</h3>
@@ -153,6 +154,6 @@ export function UploadModal({
           )}
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 }

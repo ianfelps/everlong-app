@@ -12,6 +12,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
+    "db:baseline": "tsx --env-file=.env.local scripts/baseline-drizzle.ts",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",

@@ -11,4 +11,11 @@ export type CapAberta = {
   titulo: string;
   conteudo: string;
   from: string;
+  fotos?: {
+    id: string;
+    legenda: string | null;
+    mimeType: string;
+    tamanhoBytes: string;
+    createdAt: string;
+  }[];
 };

@@ -1,4 +1,5 @@
 import { listarEventos } from '@/server/queries';
+import { listarFotosCronologicas } from '@/server/services/fotos';
 import {
   TimelineItem,
   type TimelineEvent,
@@ -12,13 +13,26 @@ export const dynamic = 'force-dynamic';
 const POEMA = 'cada data uma pequena órbita ao redor de nós';
 
 export default async function TimelinePage() {
-  const rows = await listarEventos();
+  const [rows, fotosRows] = await Promise.all([
+    listarEventos(),
+    listarFotosCronologicas(),
+  ]);
   const eventos: TimelineEvent[] = rows.map((e) => ({
+    type: 'event',
     id: e.id,
     titulo: e.titulo,
     descricao: e.descricao,
     dataEvento: e.dataEvento.toISOString(),
   }));
+  const fotos: TimelineEvent[] = fotosRows.map((f) => ({
+    type: 'photo',
+    id: f.id,
+    legenda: f.legenda,
+    dataEvento: (f.tiradaEm ?? f.uploadedAt).toISOString(),
+  }));
+  const timeline = [...eventos, ...fotos].sort(
+    (a, b) => new Date(a.dataEvento).getTime() - new Date(b.dataEvento).getTime(),
+  );
 
   return (
     <div className="page shell fade-in">
@@ -36,7 +50,7 @@ export default async function TimelinePage() {
         </div>
       </div>
 
-      {eventos.length === 0 ? (
+      {timeline.length === 0 ? (
         <EmptyState
           line={POEMA}
           title="A história ainda não tem capítulos"
@@ -45,7 +59,7 @@ export default async function TimelinePage() {
       ) : (
         <div className="tl">
           <div className="tl-spine" />
-          {eventos.map((ev, i) => (
+          {timeline.map((ev, i) => (
             <TimelineItem
               key={ev.id}
               ev={ev}
@@ -54,10 +68,6 @@ export default async function TimelinePage() {
             />
           ))}
           <div style={{ textAlign: 'center', marginTop: 8 }}>
-            <MetalSphere
-              size={64}
-              style={{ filter: 'drop-shadow(0 0 18px var(--red-glow))' }}
-            />
             <p className="serif-note" style={{ color: 'var(--red)', fontSize: 22, marginTop: 6 }}>
               … e a história continua
             </p>

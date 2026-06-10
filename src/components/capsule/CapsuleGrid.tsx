@@ -9,7 +9,12 @@ import { SealModal } from './SealModal';
 import { apiGet, ApiClientError } from '@/lib/api';
 import type { CapItem, CapAberta } from './types';
 
-type RowCapsula = { id: string; titulo: string; conteudo: string };
+type RowCapsula = {
+  id: string;
+  titulo: string;
+  conteudo: string;
+  fotos?: CapAberta['fotos'];
+};
 
 export function CapsuleGrid({ caps }: { caps: CapItem[] }) {
   const router = useRouter();
@@ -24,7 +29,13 @@ export function CapsuleGrid({ caps }: { caps: CapItem[] }) {
     setCarregando(true);
     try {
       const row = await apiGet<RowCapsula>(`/api/capsulas/${cap.id}`);
-      setReader({ id: row.id, titulo: row.titulo, conteudo: row.conteudo, from: cap.from });
+      setReader({
+        id: row.id,
+        titulo: row.titulo,
+        conteudo: row.conteudo,
+        from: cap.from,
+        fotos: row.fotos ?? [],
+      });
     } catch (e) {
       if (!(e instanceof ApiClientError)) throw e;
       setAberta(false);
