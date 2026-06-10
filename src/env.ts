@@ -3,10 +3,9 @@ import { z } from 'zod';
 
 const schema = z.object({
   DATABASE_URL: z.string().url(),
-  SUPABASE_URL: z.string().url().optional(),
-  SUPABASE_ANON_KEY: z.string().optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-  GOOGLE_SERVICE_ACCOUNT_B64: z.string().min(1),
+  GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_OAUTH_REFRESH_TOKEN: z.string().optional(),
   GOOGLE_DRIVE_FOLDER_ID: z.string().min(1),
   SESSION_SECRET: z.string().min(32),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),

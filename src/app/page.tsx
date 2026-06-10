@@ -1,8 +1,9 @@
-export default function HomePage() {
-  return (
-    <main>
-      <h1>Everlong API</h1>
-      <p>Back-end ativo. Front-end fora de escopo nesta fase.</p>
-    </main>
-  );
+import { readSession } from '@/server/lib/session';
+import { Identity } from '@/components/identity/Identity';
+
+export const dynamic = 'force-dynamic';
+
+export default async function IdentityPage() {
+  const session = await readSession();
+  return <Identity enterHref={session ? '/home' : '/login'} />;
 }

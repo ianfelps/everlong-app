@@ -1,19 +1,18 @@
 # Everlong
 
-Álbum de fotos e memórias de um casal. Web app feito sob medida para guardar lembranças, marcar momentos da relação e trocar recadinhos em tempo real.
-
-> **Status atual:** back-end e camada de dados concluídos. Front-end será desenvolvido na próxima fase.
+Álbum de fotos e memórias de um casal. Web app sob medida para guardar lembranças, marcar os momentos da relação e trocar recadinhos — tudo num dark mode azul-petróleo com a esfera metálica como assinatura visual.
 
 ---
 
 ## Funcionalidades
 
-- **Álbum de fotos** — upload com legenda, organização por fases da relação. Binários no Google Drive (privado), metadados no Postgres.
-- **Cronômetro de namoro** — tempo decorrido desde a primeira data, fragmentado em anos/meses/dias/horas/minutos/segundos.
-- **Linha do tempo** — eventos marcantes associados a fases, com foto-capa opcional.
-- **Cápsulas do tempo** — mensagens bloqueadas até uma data futura. Conteúdo nunca trafega antes do desbloqueio (`423 Locked`).
-- **Mural de recados** — post-its colaborativos com sincronização em tempo real entre os dois perfis (Supabase Realtime).
-- **Autenticação por perfil** — dois perfis pré-criados (casal); login = escolher perfil + senha.
+- **Landing** — apresentação do app com a identidade visual e CTA de entrada.
+- **Login por perfil** — dois perfis pré-criados (o casal); login = escolher perfil + senha.
+- **Dashboard** — cronômetro de namoro ao vivo (anos→segundos), fotos recentes, últimos recados e próxima cápsula.
+- **Álbum** — grid masonry, upload com legenda/data, lightbox com editar/excluir. Binários no Google Drive, metadados no Postgres.
+- **Linha do tempo** — marcos da relação alternando lados, criar/editar/excluir evento.
+- **Cápsula do tempo** — mensagens bloqueadas até uma data futura. O conteúdo nunca trafega antes do desbloqueio (`423 Locked`).
+- **Mural de recados** — post-its coloridos com atualização ao vivo via polling (~10s) entre os dois perfis.
 
 ---
 
@@ -21,55 +20,50 @@
 
 | Camada | Tecnologia |
 |---|---|
-| Framework | Next.js 15 (App Router, Route Handlers em Node runtime) |
+| Framework | Next.js 15 (App Router, RSC + Route Handlers em Node runtime) |
 | Linguagem | TypeScript |
-| Banco de dados | PostgreSQL via Supabase |
+| Estilo | Tailwind CSS v4 (tokens em `@theme`) + ícones lucide-react |
+| Banco | PostgreSQL (Supabase) |
 | ORM | DrizzleORM + driver `postgres` |
-| Realtime | Supabase Realtime (canal `postgres_changes`) |
-| Armazenamento de mídia | Google Drive via Service Account (`googleapis`) |
-| Autenticação | argon2id + JWT HS256 (`jose`) em cookie HttpOnly |
+| Mídia | Google Drive via OAuth pessoal (`googleapis`) — arquivos na sua conta |
+| Auth | argon2id + JWT HS256 (`jose`) em cookie HttpOnly |
 | Validação | zod |
-| Docs | OpenAPI 3.1 + Swagger UI |
+| Docs API | OpenAPI 3.1 + Swagger UI (`/api/docs`) |
 
 ### Decisões arquiteturais
 
-- **Single-tenant**: o sistema atende um único casal — schema sem `casal_id` propagado.
-- **Drive oculto**: o client nunca fala direto com o Google Drive. Todo upload e leitura passa pelo back-end.
-- **Defesa em profundidade**: RLS habilitado em todas as tabelas; a API usa `service_role`.
-- **Realtime apenas em recados**: única tabela que precisa de sincronização ao vivo.
+- **Single-tenant** — atende um único casal; schema sem `casal_id`.
+- **RSC-first** — páginas server leem dados via service/db direto; client components só onde há interatividade (cronômetro, upload, mural, leitura de cápsula, login).
+- **Drive oculto** — o client nunca fala direto com o Google Drive; todo upload e leitura passa pelo back-end.
+- **Mural por polling** — sem websocket no back-end; o mural busca novidades a cada ~10s + update otimista.
 
 ---
 
-## Estrutura do projeto
+## Estrutura
 
 ```
 src/
 ├── app/
-│   ├── api/                # Route Handlers REST
-│   │   ├── auth/           # login, logout, me
-│   │   ├── perfis/
-│   │   ├── fotos/          # CRUD + binario (stream proxy)
-│   │   ├── cronometro/
-│   │   ├── fases/
-│   │   ├── eventos/
-│   │   ├── capsulas/       # gate temporal (423)
-│   │   ├── recados/        # Realtime
-│   │   ├── health/
-│   │   ├── openapi/        # spec JSON
-│   │   └── docs/           # Swagger UI
+│   ├── (app)/              # área autenticada (guard de sessão)
+│   │   ├── home|album|timeline|capsule|board/
+│   │   └── layout.tsx
+│   ├── login/
+│   ├── page.tsx            # landing
 │   ├── layout.tsx
-│   └── page.tsx
-├── server/
-│   ├── db/                 # Drizzle client + schema
-│   ├── services/           # lógica de domínio (drive, auth, fotos, capsulas, cronometro)
-│   └── lib/                # http helpers, session, openapi
-├── types/                  # DTOs e tipos de domínio
-└── env.ts                  # validação de env via zod
-drizzle/
-└── migrations/             # SQL inicial (tabelas + triggers + Realtime + RLS)
+│   ├── icon.svg            # favicon (esfera + coração)
+│   ├── globals.css         # design system (Tailwind v4)
+│   └── api/                # Route Handlers REST
+├── components/             # brand, nav, dashboard, album, timeline, capsule, board, identity, ui
+├── lib/                    # api (fetch client), colors, format
+└── server/
+    ├── db/                 # Drizzle client + schema
+    ├── services/           # auth, drive, fotos, capsulas, cronometro
+    ├── queries.ts          # leituras p/ RSC
+    └── lib/                # http, session, openapi
 scripts/
 ├── seed-perfis.ts          # cria os 2 perfis + config_casal
-└── init-drive-folder.ts    # cria pasta raiz no Drive (1x)
+├── gen-drive-token.ts      # gera o refresh token OAuth (1x)
+└── init-drive-folder.ts    # cria a pasta raiz no seu Drive
 ```
 
 ---
@@ -77,56 +71,50 @@ scripts/
 ## Setup
 
 ### 1. Pré-requisitos
-
 - Node.js 20+ e pnpm
-- Conta no [Supabase](https://supabase.com)
-- Conta no [Google Cloud](https://console.cloud.google.com) com Drive API habilitada
+- Conta no [Supabase](https://supabase.com) (Postgres)
+- Conta Google + projeto no [Google Cloud](https://console.cloud.google.com) com Drive API habilitada
 
 ### 2. Variáveis de ambiente
 
 ```bash
 pnpm install
 cp .env.example .env.local
-# preencha DATABASE_URL, SESSION_SECRET, GOOGLE_*
 ```
 
-`.env.local` mínimo:
+`.env.local`:
 
 ```
 DATABASE_URL=postgres://postgres.xxxxx:<SENHA_URL_ENCODED>@aws-0-xxx.pooler.supabase.com:5432/postgres
-GOOGLE_SERVICE_ACCOUNT_B64=<base64 do JSON da SA>
-GOOGLE_DRIVE_FOLDER_ID=<id da pasta>
-SESSION_SECRET=<32 bytes hex — openssl rand -hex 32>
+GOOGLE_OAUTH_CLIENT_ID=
+GOOGLE_OAUTH_CLIENT_SECRET=
+GOOGLE_OAUTH_REFRESH_TOKEN=
+GOOGLE_DRIVE_FOLDER_ID=
+SESSION_SECRET=          # openssl rand -hex 32
 ```
-
-> Se a senha do Postgres tiver `@`, `:`, `/`, `#` etc, faça URL-encode com `[System.Web.HttpUtility]::UrlEncode(...)` no PowerShell.
 
 ### 3. Banco
 
-**Recomendado** — cole `drizzle/migrations/0000_init.sql` no SQL Editor do Supabase. Inclui tabelas + triggers + publication do Realtime + RLS.
+Cole `drizzle/migrations/0000_init.sql` no SQL Editor do Supabase (tabelas + triggers + RLS). Alternativa em dev: `pnpm db:push`.
 
-Alternativa via Drizzle (não aplica os blocos custom):
+### 4. Google Drive (OAuth pessoal)
 
-```bash
-pnpm db:push
-```
+Os arquivos ficam na **sua** conta Google (15 GB grátis), não numa Service Account.
 
-### 4. Google Drive
-
-1. Crie um projeto no GCP, habilite a Drive API.
-2. Crie uma Service Account → Keys → Add Key → JSON. Baixe o arquivo.
-3. Converta em base64 e cole em `GOOGLE_SERVICE_ACCOUNT_B64`:
-   ```powershell
-   [Convert]::ToBase64String([IO.File]::ReadAllBytes("service-account.json"))
+1. Google Cloud Console → habilite a **Drive API**.
+2. **OAuth consent screen** → tipo External → adicione seu e-mail em test users → **Publish app** (Production), senão o refresh token expira em 7 dias.
+3. **Credentials → OAuth client ID → Desktop app** → copie Client ID e Secret para o `.env.local`.
+4. Gere o refresh token:
+   ```bash
+   pnpm drive:token
    ```
-4. Crie a pasta raiz:
+   Abra a URL, autorize, cole o `GOOGLE_OAUTH_REFRESH_TOKEN` no `.env.local`.
+5. Crie a pasta raiz e copie o id para `GOOGLE_DRIVE_FOLDER_ID`:
    ```bash
    pnpm drive:init "Everlong"
    ```
-   Cole o ID retornado em `GOOGLE_DRIVE_FOLDER_ID`.
-5. **Compartilhe a pasta com o `client_email` da Service Account** (Editor). Sem isso os uploads ficam invisíveis no seu Drive.
 
-### 5. Seed dos 2 perfis + linha de configuração
+### 5. Seed dos perfis
 
 ```bash
 pnpm seed -- "Pessoa A" "senhaA" "Pessoa B" "senhaB" "2020-01-01T00:00:00Z" "<drive_folder_id>"
@@ -140,8 +128,44 @@ pnpm dev
 
 - App: http://localhost:3000
 - Swagger UI: http://localhost:3000/api/docs
-- OpenAPI spec: http://localhost:3000/api/openapi
 - Health: http://localhost:3000/api/health
+
+---
+
+## Deploy (Render — grátis)
+
+O app roda como servidor Node (não serverless), então não esbarra no limite de body de 4.5 MB nem em problemas com módulos nativos.
+
+1. Push do repo para o GitHub.
+2. Render → **New → Blueprint** (lê o `render.yaml`) ou **New → Web Service** manual:
+   - Build: `pnpm install --frozen-lockfile && pnpm build`
+   - Start: `pnpm start` (o Next lê `$PORT`)
+3. Em **Environment**, defina as 6 variáveis do `.env.local`.
+4. Deploy. Health check em `/api/health`.
+
+> Plano free dorme após ~15 min de inatividade (cold start ~40s na 1ª visita).
+>
+> **Vercel não é recomendada**: funções serverless têm limite de **4.5 MB** no body → uploads de foto maiores quebram. No Render não há esse limite.
+
+---
+
+## Scripts
+
+```bash
+pnpm dev          # dev server
+pnpm build        # build de produção
+pnpm start        # serve o build
+pnpm typecheck    # tsc --noEmit
+pnpm test         # vitest
+
+pnpm db:push      # aplica schema (dev)
+pnpm db:migrate   # migrations versionadas
+pnpm db:studio    # Drizzle Studio
+
+pnpm seed         # cria os 2 perfis + config
+pnpm drive:token  # gera o refresh token OAuth do Drive
+pnpm drive:init   # cria a pasta raiz no Drive
+```
 
 ---
 
@@ -150,88 +174,33 @@ pnpm dev
 | Método | Path | Descrição |
 |---|---|---|
 | GET  | `/api/health` | Status + ping DB |
-| GET  | `/api/docs` | Swagger UI interativa |
-| GET  | `/api/openapi` | OpenAPI 3.1 JSON |
+| GET  | `/api/docs` / `/api/openapi` | Swagger UI / spec |
 | POST | `/api/auth/login` | `{perfil_id, senha}` → cookie `evl_session` |
 | POST | `/api/auth/logout` | Limpa cookie |
 | GET  | `/api/auth/me` | Perfil corrente |
 | GET  | `/api/perfis` | Lista perfis (sem hash) |
-| GET/POST | `/api/fotos` | Lista paginada (cursor) / upload multipart |
+| GET/POST | `/api/fotos` | Lista paginada / upload multipart |
 | GET/PATCH/DELETE | `/api/fotos/:id` | Metadados |
 | GET  | `/api/fotos/:id/binario` | Stream proxy do Drive |
 | GET  | `/api/cronometro` | Tempo decorrido fragmentado |
-| GET/POST | `/api/fases` | CRUD fases |
-| PATCH/DELETE | `/api/fases/:id` | |
-| GET/POST | `/api/eventos` | Linha do tempo |
-| PATCH/DELETE | `/api/eventos/:id` | |
+| GET/POST · PATCH/DELETE | `/api/fases` · `/api/fases/:id` | Fases |
+| GET/POST · PATCH/DELETE | `/api/eventos` · `/api/eventos/:id` | Linha do tempo |
 | GET/POST | `/api/capsulas` | Metadata-only na listagem |
-| GET/DELETE | `/api/capsulas/:id` | **423 Locked** antes de `data_desbloqueio` |
-| GET/POST | `/api/recados` | Realtime via `supabase_realtime` |
-| PATCH/DELETE | `/api/recados/:id` | |
-
-Documentação interativa completa em `/api/docs`.
-
----
-
-## Realtime (recados)
-
-A migration já habilita `recados` no `supabase_realtime`. Consumo futuro no front:
-
-```ts
-supabase.channel('recados')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'recados' }, (p) => console.log(p))
-  .subscribe();
-```
-
-Para consumir Realtime direto do client, adicione uma policy `SELECT` em `recados` para `anon`/`authenticated`.
-
----
-
-## Scripts
-
-```bash
-pnpm dev         # dev server
-pnpm build       # build de produção
-pnpm start       # serve build
-pnpm typecheck   # tsc --noEmit
-pnpm lint
-pnpm test        # vitest
-
-pnpm db:generate # gera migration nova a partir do schema
-pnpm db:push     # aplica schema direto (dev)
-pnpm db:migrate  # aplica migrations versionadas
-pnpm db:studio   # Drizzle Studio
-
-pnpm seed        # roda seed-perfis.ts
-pnpm drive:init  # cria pasta raiz no Drive
-```
+| GET/DELETE | `/api/capsulas/:id` | **423 Locked** antes da `data_desbloqueio` |
+| GET/POST · PATCH/DELETE | `/api/recados` · `/api/recados/:id` | Mural |
 
 ---
 
 ## Segurança
 
-- **RLS** habilitado em todas as tabelas; back-end usa `service_role` (bypass intencional). Defesa em profundidade.
-- **Cookie** de sessão: HttpOnly + SameSite=Lax + Secure em produção.
-- **Argon2id** (memoryCost 19 MiB, t=2, p=1).
-- **Rate limit** in-memory por perfil no login (5 tentativas / 1 min). Para múltiplas instâncias, migrar para Redis/Upstash.
-- **Cápsulas** nunca retornam `conteudo` antes da `data_desbloqueio` — listagem usa `select` explícito e o gate `423 Locked` é aplicado no service, não confiando apenas no cliente.
-- **Drive** acessível só pela Service Account; o client nunca recebe credenciais ou file IDs externos.
-
----
-
-## Roadmap
-
-- [x] Back-end: schema, migrations, endpoints REST
-- [x] Integração com Google Drive
-- [x] Auth de perfis
-- [x] OpenAPI + Swagger UI
-- [x] Health check
-- [ ] Front-end (Next.js, mesma codebase)
-- [ ] Testes automatizados (cronometro, capsulas, auth)
-- [ ] Deploy (Vercel + Supabase produção)
+- **RLS** habilitado nas tabelas; back-end usa `service_role` (defesa em profundidade).
+- **Cookie** de sessão HttpOnly + SameSite=Lax + Secure em produção.
+- **Argon2id** (memoryCost 19 MiB, t=2, p=1) + rate limit in-memory no login (5/min por perfil).
+- **Cápsulas** nunca retornam `conteudo` antes da `data_desbloqueio` — gate `423` no service.
+- **Drive** acessível só pelo back-end (OAuth do dono); o client nunca recebe credenciais ou file IDs externos.
 
 ---
 
 ## Licença
 
-Ver `LICENSE`.
+Ver [`LICENSE`](./LICENSE).

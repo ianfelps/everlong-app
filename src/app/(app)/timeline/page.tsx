@@ -1,0 +1,69 @@
+import { listarEventos } from '@/server/queries';
+import {
+  TimelineItem,
+  type TimelineEvent,
+} from '@/components/timeline/TimelineItem';
+import { MetalSphere } from '@/components/brand/MetalSphere';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { TimelineAdd } from '@/components/timeline/TimelineAdd';
+
+export const dynamic = 'force-dynamic';
+
+const POEMA = 'cada data uma pequena órbita ao redor de nós';
+
+export default async function TimelinePage() {
+  const rows = await listarEventos();
+  const eventos: TimelineEvent[] = rows.map((e) => ({
+    id: e.id,
+    titulo: e.titulo,
+    descricao: e.descricao,
+    dataEvento: e.dataEvento.toISOString(),
+  }));
+
+  return (
+    <div className="page shell fade-in">
+      <div className="page-head" style={{ textAlign: 'center' }}>
+        <span className="eyebrow">{POEMA}</span>
+        <h1 className="page-title" style={{ marginTop: 10 }}>
+          A linha do tempo
+        </h1>
+        <p className="page-sub" style={{ margin: '8px auto 0' }}>
+          Marcos da história de vocês — o primeiro encontro, uma viagem, uma data. Cada um vira um
+          ponto na linha.
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+          <TimelineAdd />
+        </div>
+      </div>
+
+      {eventos.length === 0 ? (
+        <EmptyState
+          line={POEMA}
+          title="A história ainda não tem capítulos"
+          hint="Use “Adicionar marco” acima para criar o primeiro evento."
+        />
+      ) : (
+        <div className="tl">
+          <div className="tl-spine" />
+          {eventos.map((ev, i) => (
+            <TimelineItem
+              key={ev.id}
+              ev={ev}
+              side={i % 2 === 0 ? 'right' : 'left'}
+              index={i}
+            />
+          ))}
+          <div style={{ textAlign: 'center', marginTop: 8 }}>
+            <MetalSphere
+              size={64}
+              style={{ filter: 'drop-shadow(0 0 18px var(--red-glow))' }}
+            />
+            <p className="serif-note" style={{ color: 'var(--red)', fontSize: 22, marginTop: 6 }}>
+              … e a história continua
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
