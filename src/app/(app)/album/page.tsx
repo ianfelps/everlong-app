@@ -11,8 +11,6 @@ export default async function AlbumPage() {
     legenda: f.legenda,
     tiradaEm: f.tiradaEm ? f.tiradaEm.toISOString() : null,
     uploadedAt: f.uploadedAt.toISOString(),
-    largura: f.largura,
-    altura: f.altura,
   }));
   return <AlbumGrid fotos={fotos} />;
 }

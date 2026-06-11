@@ -9,7 +9,6 @@ import { deleteFoto, uploadFoto } from './drive';
 const COLUNAS_METADATA = {
   id: capsulas.id,
   autorId: capsulas.autorId,
-  destinatarioId: capsulas.destinatarioId,
   titulo: capsulas.titulo,
   dataCriacao: capsulas.dataCriacao,
   dataDesbloqueio: capsulas.dataDesbloqueio,
@@ -18,7 +17,6 @@ const COLUNAS_METADATA = {
 
 export type CriarCapsulaInput = {
   autorId: string;
-  destinatarioId: string | null;
   titulo: string;
   conteudo: string;
   dataDesbloqueio: Date;
@@ -57,7 +55,6 @@ export async function criarCapsula(input: CriarCapsulaInput) {
         .insert(capsulas)
         .values({
           autorId: input.autorId,
-          destinatarioId: input.destinatarioId,
           titulo: input.titulo,
           conteudo: input.conteudo,
           dataDesbloqueio: input.dataDesbloqueio,
@@ -165,13 +162,24 @@ export async function removerCapsula(id: string): Promise<boolean> {
     .from(capsulaFotos)
     .where(eq(capsulaFotos.capsulaId, id));
 
-  for (const foto of fotos) {
-    await deleteFoto(foto.driveFileId);
-  }
-
   const deleted = await db
     .delete(capsulas)
     .where(eq(capsulas.id, id))
     .returning({ id: capsulas.id });
-  return deleted.length > 0;
+  if (deleted.length === 0) return false;
+
+  const cleanup = await Promise.allSettled(
+    fotos.map((foto) => deleteFoto(foto.driveFileId)),
+  );
+  cleanup.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      console.error(
+        '[capsulas] cleanup drive falhou',
+        fotos[index]?.driveFileId,
+        result.reason,
+      );
+    }
+  });
+
+  return true;
 }

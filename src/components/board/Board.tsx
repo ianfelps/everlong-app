@@ -11,9 +11,12 @@ type RecadoRow = {
   conteudo: string;
   cor: string;
   autorId: string;
-  rotacao: number;
   createdAt: string;
   live?: boolean;
+};
+
+type RecadoView = RecadoRow & {
+  rotacao: number;
 };
 
 const POLL_MS = 10_000;
@@ -29,7 +32,9 @@ export function Board({
   perfis: Record<string, string>;
   meuId: string;
 }) {
-  const [notes, setNotes] = useState<RecadoRow[]>(inicial);
+  const [notes, setNotes] = useState<RecadoView[]>(
+    inicial.map((note) => ({ ...note, rotacao: rndRot() })),
+  );
   const [text, setText] = useState('');
   const [cor, setCor] = useState(CORES_RECADO[0]!.nome);
   const [ordem, setOrdem] = useState<Ordem>('desc');
@@ -43,7 +48,7 @@ export function Board({
         return rows.map((r) => ({
           ...r,
           live: !conhecidos.current.has(r.id) && r.autorId !== meuId,
-          rotacao: rotPorId.get(r.id) ?? r.rotacao,
+          rotacao: rotPorId.get(r.id) ?? rndRot(),
         }));
       });
       rows.forEach((r) => conhecidos.current.add(r.id));
@@ -62,7 +67,7 @@ export function Board({
     const conteudo = text.trim();
     if (!conteudo) return;
     const rotacao = rndRot();
-    const otimista: RecadoRow = {
+    const otimista: RecadoView = {
       id: `tmp-${Date.now()}`,
       conteudo,
       cor,
@@ -76,11 +81,10 @@ export function Board({
       const row = await apiJson<RecadoRow>('/api/recados', 'POST', {
         conteudo,
         cor,
-        rotacao,
       });
       if (row) {
         conhecidos.current.add(row.id);
-        setNotes((n) => n.map((x) => (x.id === otimista.id ? { ...row } : x)));
+        setNotes((n) => n.map((x) => (x.id === otimista.id ? { ...row, rotacao } : x)));
       }
     } catch (e) {
       setNotes((n) => n.filter((x) => x.id !== otimista.id));

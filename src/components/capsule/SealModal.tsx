@@ -105,6 +105,7 @@ export function SealModal({
                     {foto.name}
                     <button
                       type="button"
+                      aria-label={`Remover foto ${foto.name}`}
                       onClick={() => setFotos((atuais) => atuais.filter((_, idx) => idx !== i))}
                     >
                       <X size={12} />

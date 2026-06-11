@@ -95,7 +95,7 @@ SESSION_SECRET=          # openssl rand -hex 32
 
 ### 3. Banco
 
-Cole `drizzle/migrations/0000_init.sql` no SQL Editor do Supabase (tabelas + triggers + RLS). Alternativa em dev: `pnpm db:push`.
+Rode as migrations versionadas com `pnpm db:migrate`. Alternativa em dev: `pnpm db:push`.
 
 Se o banco ja recebeu a `0000_init.sql` manualmente e voce quer continuar usando migrations versionadas, rode uma vez:
 
@@ -124,8 +124,10 @@ Os arquivos ficam na **sua** conta Google (15 GB grátis), não numa Service Acc
 ### 5. Seed dos perfis
 
 ```bash
-pnpm seed -- "Pessoa A" "senhaA" "Pessoa B" "senhaB" "2020-01-01T00:00:00Z" "<drive_folder_id>"
+pnpm seed -- "Pessoa A" "senhaA" "Pessoa B" "senhaB" "2020-01-01T00:00:00Z"
 ```
+
+Para habilitar a carta escondida da home, preencha `config_casal.carta_secreta` diretamente no banco.
 
 ### 6. Dev
 
@@ -191,7 +193,6 @@ pnpm drive:init   # cria a pasta raiz no Drive
 | GET/PATCH/DELETE | `/api/fotos/:id` | Metadados |
 | GET  | `/api/fotos/:id/binario` | Stream proxy do Drive |
 | GET  | `/api/cronometro` | Tempo decorrido fragmentado |
-| GET/POST · PATCH/DELETE | `/api/fases` · `/api/fases/:id` | Fases |
 | GET/POST · PATCH/DELETE | `/api/eventos` · `/api/eventos/:id` | Linha do tempo |
 | GET/POST | `/api/capsulas` | Metadata-only na listagem |
 | GET/DELETE | `/api/capsulas/:id` | **423 Locked** antes da `data_desbloqueio` |

@@ -17,7 +17,6 @@ export const openapiSpec = {
     { name: 'perfis' },
     { name: 'fotos' },
     { name: 'cronometro' },
-    { name: 'fases' },
     { name: 'eventos' },
     { name: 'capsulas' },
     { name: 'recados' },
@@ -42,20 +41,6 @@ export const openapiSpec = {
         properties: {
           id: { type: 'string', format: 'uuid' },
           nome: { type: 'string' },
-          avatarUrl: { type: 'string', nullable: true },
-        },
-      },
-      Fase: {
-        type: 'object',
-        required: ['id', 'nome', 'dataInicio', 'ordem'],
-        properties: {
-          id: { type: 'string', format: 'uuid' },
-          nome: { type: 'string' },
-          descricao: { type: 'string', nullable: true },
-          dataInicio: { type: 'string', format: 'date' },
-          dataFim: { type: 'string', format: 'date', nullable: true },
-          ordem: { type: 'integer' },
-          createdAt: { type: 'string', format: 'date-time' },
         },
       },
       Foto: {
@@ -63,13 +48,10 @@ export const openapiSpec = {
         required: ['id', 'driveFileId', 'mimeType', 'tamanhoBytes', 'uploadedAt'],
         properties: {
           id: { type: 'string', format: 'uuid' },
-          faseId: { type: 'string', format: 'uuid', nullable: true },
           autorId: { type: 'string', format: 'uuid', nullable: true },
           driveFileId: { type: 'string' },
           mimeType: { type: 'string' },
           tamanhoBytes: { type: 'string', description: 'bigint serializado' },
-          largura: { type: 'integer', nullable: true },
-          altura: { type: 'integer', nullable: true },
           legenda: { type: 'string', nullable: true },
           tiradaEm: { type: 'string', format: 'date-time', nullable: true },
           uploadedAt: { type: 'string', format: 'date-time' },
@@ -80,12 +62,9 @@ export const openapiSpec = {
         required: ['id', 'titulo', 'dataEvento'],
         properties: {
           id: { type: 'string', format: 'uuid' },
-          faseId: { type: 'string', format: 'uuid', nullable: true },
-          fotoId: { type: 'string', format: 'uuid', nullable: true },
           titulo: { type: 'string' },
           descricao: { type: 'string', nullable: true },
           dataEvento: { type: 'string', format: 'date-time' },
-          icone: { type: 'string', nullable: true },
           createdAt: { type: 'string', format: 'date-time' },
         },
       },
@@ -95,7 +74,6 @@ export const openapiSpec = {
         properties: {
           id: { type: 'string', format: 'uuid' },
           autorId: { type: 'string', format: 'uuid' },
-          destinatarioId: { type: 'string', format: 'uuid', nullable: true },
           titulo: { type: 'string' },
           dataCriacao: { type: 'string', format: 'date-time' },
           dataDesbloqueio: { type: 'string', format: 'date-time' },
@@ -137,9 +115,6 @@ export const openapiSpec = {
           autorId: { type: 'string', format: 'uuid' },
           conteudo: { type: 'string' },
           cor: { type: 'string' },
-          posicaoX: { type: 'integer' },
-          posicaoY: { type: 'integer' },
-          rotacao: { type: 'integer' },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
         },
@@ -233,22 +208,6 @@ export const openapiSpec = {
                 },
               },
             },
-            'multipart/form-data': {
-              schema: {
-                type: 'object',
-                required: ['titulo', 'conteudo', 'data_desbloqueio'],
-                properties: {
-                  titulo: { type: 'string' },
-                  conteudo: { type: 'string' },
-                  data_desbloqueio: { type: 'string', format: 'date-time' },
-                  destinatario_id: { type: 'string', format: 'uuid', nullable: true },
-                  fotos: {
-                    type: 'array',
-                    items: { type: 'string', format: 'binary' },
-                  },
-                },
-              },
-            },
           },
         },
         responses: {
@@ -316,7 +275,6 @@ export const openapiSpec = {
         summary: 'Lista fotos (paginação cursor)',
         security: [{ cookieAuth: [] }],
         parameters: [
-          { name: 'fase_id', in: 'query', schema: { type: 'string', format: 'uuid' } },
           { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 30 } },
           { name: 'cursor', in: 'query', schema: { type: 'string' } },
         ],
@@ -353,7 +311,6 @@ export const openapiSpec = {
                 properties: {
                   arquivo: { type: 'string', format: 'binary' },
                   legenda: { type: 'string' },
-                  fase_id: { type: 'string', format: 'uuid' },
                   tirada_em: { type: 'string', format: 'date-time' },
                 },
               },
@@ -394,7 +351,6 @@ export const openapiSpec = {
                 type: 'object',
                 properties: {
                   legenda: { type: 'string', nullable: true },
-                  fase_id: { type: 'string', format: 'uuid', nullable: true },
                   tirada_em: { type: 'string', format: 'date-time', nullable: true },
                 },
               },
@@ -430,67 +386,11 @@ export const openapiSpec = {
         },
       },
     },
-    '/api/fases': {
-      get: {
-        tags: ['fases'],
-        security: [{ cookieAuth: [] }],
-        responses: {
-          200: {
-            description: 'Lista',
-            content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Fase' } } } },
-          },
-        },
-      },
-      post: {
-        tags: ['fases'],
-        security: [{ cookieAuth: [] }],
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                required: ['nome', 'data_inicio', 'ordem'],
-                properties: {
-                  nome: { type: 'string' },
-                  descricao: { type: 'string' },
-                  data_inicio: { type: 'string', format: 'date' },
-                  data_fim: { type: 'string', format: 'date', nullable: true },
-                  ordem: { type: 'integer' },
-                },
-              },
-            },
-          },
-        },
-        responses: {
-          201: { description: 'Criada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Fase' } } } },
-        },
-      },
-    },
-    '/api/fases/{id}': {
-      parameters: [
-        { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
-      ],
-      patch: {
-        tags: ['fases'],
-        security: [{ cookieAuth: [] }],
-        responses: {
-          200: { description: 'Atualizada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Fase' } } } },
-          404: { $ref: '#/components/responses/NotFound' },
-        },
-      },
-      delete: {
-        tags: ['fases'],
-        security: [{ cookieAuth: [] }],
-        responses: { 204: { $ref: '#/components/responses/NoContent' }, 404: { $ref: '#/components/responses/NotFound' } },
-      },
-    },
     '/api/eventos': {
       get: {
         tags: ['eventos'],
         security: [{ cookieAuth: [] }],
         parameters: [
-          { name: 'fase_id', in: 'query', schema: { type: 'string', format: 'uuid' } },
           { name: 'ordem', in: 'query', schema: { type: 'string', enum: ['asc', 'desc'], default: 'desc' } },
         ],
         responses: {
@@ -511,9 +411,6 @@ export const openapiSpec = {
                   titulo: { type: 'string' },
                   descricao: { type: 'string' },
                   data_evento: { type: 'string', format: 'date-time' },
-                  icone: { type: 'string' },
-                  fase_id: { type: 'string', format: 'uuid', nullable: true },
-                  foto_id: { type: 'string', format: 'uuid', nullable: true },
                 },
               },
             },
@@ -562,7 +459,22 @@ export const openapiSpec = {
                   titulo: { type: 'string' },
                   conteudo: { type: 'string' },
                   data_desbloqueio: { type: 'string', format: 'date-time' },
-                  destinatario_id: { type: 'string', format: 'uuid', nullable: true },
+                },
+              },
+            },
+            'multipart/form-data': {
+              schema: {
+                type: 'object',
+                required: ['titulo', 'conteudo', 'data_desbloqueio'],
+                properties: {
+                  titulo: { type: 'string' },
+                  conteudo: { type: 'string' },
+                  data_desbloqueio: { type: 'string', format: 'date-time' },
+                  fotos: {
+                    type: 'array',
+                    maxItems: 10,
+                    items: { type: 'string', format: 'binary' },
+                  },
                 },
               },
             },
@@ -570,6 +482,7 @@ export const openapiSpec = {
         },
         responses: {
           201: { description: 'Criada', content: { 'application/json': { schema: { $ref: '#/components/schemas/CapsulaMetadata' } } } },
+          400: { description: 'Payload inválido ou limite de fotos excedido' },
         },
       },
     },
@@ -610,6 +523,7 @@ export const openapiSpec = {
             description: 'Binário da imagem',
             content: { 'image/*': { schema: { type: 'string', format: 'binary' } } },
           },
+          401: { $ref: '#/components/responses/Unauthorized' },
           423: { description: 'Locked' },
           404: { $ref: '#/components/responses/NotFound' },
         },
@@ -643,9 +557,6 @@ export const openapiSpec = {
                 properties: {
                   conteudo: { type: 'string' },
                   cor: { type: 'string' },
-                  posicao_x: { type: 'integer' },
-                  posicao_y: { type: 'integer' },
-                  rotacao: { type: 'integer' },
                 },
               },
             },

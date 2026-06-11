@@ -1,7 +1,7 @@
 import 'server-only';
 import { asc, desc } from 'drizzle-orm';
 import { db } from '@/server/db';
-import { eventos, perfis, recados } from '@/server/db/schema';
+import { configCasal, eventos, perfis, recados } from '@/server/db/schema';
 
 export async function mapaPerfis(): Promise<Map<string, string>> {
   const rows = await db
@@ -16,6 +16,14 @@ export async function nomesCasal(): Promise<string[]> {
     .from(perfis)
     .orderBy(asc(perfis.createdAt));
   return rows.map((r) => r.nome);
+}
+
+export async function obterCartaSecreta(): Promise<string | null> {
+  const [row] = await db
+    .select({ cartaSecreta: configCasal.cartaSecreta })
+    .from(configCasal)
+    .limit(1);
+  return row?.cartaSecreta ?? null;
 }
 
 export async function listarRecados() {

@@ -1,4 +1,4 @@
-// Roda com: pnpm seed -- "Pessoa A" "senha A" "Pessoa B" "senha B" "2020-01-01T00:00:00Z" "<drive_folder_id>"
+// Roda com: pnpm seed -- "Pessoa A" "senha A" "Pessoa B" "senha B" "2020-01-01T00:00:00Z"
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import argon2 from 'argon2';
@@ -7,14 +7,14 @@ import { perfis, configCasal } from '../src/server/db/schema';
 
 async function main() {
   const args = process.argv.slice(2);
-  if (args.length < 6) {
+  if (args.length < 5) {
     console.error(
-      'uso: seed-perfis.ts <nomeA> <senhaA> <nomeB> <senhaB> <data_inicio_iso> <drive_folder_id>',
+      'uso: seed-perfis.ts <nomeA> <senhaA> <nomeB> <senhaB> <data_inicio_iso>',
     );
     process.exit(1);
   }
-  const [nomeA, senhaA, nomeB, senhaB, dataInicioIso, driveFolderId] = args as [
-    string, string, string, string, string, string,
+  const [nomeA, senhaA, nomeB, senhaB, dataInicioIso] = args as [
+    string, string, string, string, string,
   ];
 
   const url = process.env.DATABASE_URL;
@@ -42,13 +42,11 @@ async function main() {
     .values({
       id: true,
       dataInicio: new Date(dataInicioIso),
-      driveFolderId,
     })
     .onConflictDoUpdate({
       target: configCasal.id,
       set: {
         dataInicio: sql`excluded.data_inicio`,
-        driveFolderId: sql`excluded.drive_folder_id`,
       },
     });
 
