@@ -13,12 +13,10 @@ export const maxDuration = 60;
 
 const metaSchema = z.object({
   legenda: z.string().max(500).optional(),
-  fase_id: z.string().uuid().optional(),
   tirada_em: z.string().datetime().optional(),
 });
 
 const querySchema = z.object({
-  fase_id: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(30),
   cursor: z.string().optional(),
 });
@@ -49,7 +47,6 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const q = querySchema.parse(Object.fromEntries(url.searchParams));
     const { items, nextCursor } = await listarFotos({
-      faseId: q.fase_id,
       limit: q.limit,
       cursor: q.cursor ? decodeCursor(q.cursor) : undefined,
     });
@@ -71,14 +68,12 @@ export async function POST(req: NextRequest) {
 
     const meta = metaSchema.parse({
       legenda: form.get('legenda') ?? undefined,
-      fase_id: form.get('fase_id') ?? undefined,
       tirada_em: form.get('tirada_em') ?? undefined,
     });
 
     const row = await criarFoto({
       file,
       autorId: session.perfilId,
-      faseId: meta.fase_id ?? null,
       legenda: meta.legenda ?? null,
       tiradaEm: meta.tirada_em ? new Date(meta.tirada_em) : null,
     });

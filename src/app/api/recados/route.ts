@@ -11,9 +11,6 @@ export const runtime = 'nodejs';
 const createSchema = z.object({
   conteudo: z.string().min(1).max(2000),
   cor: z.string().max(40).optional(),
-  posicao_x: z.number().int().optional(),
-  posicao_y: z.number().int().optional(),
-  rotacao: z.number().int().min(-180).max(180).optional(),
 });
 
 const querySchema = z.object({
@@ -42,9 +39,6 @@ export async function POST(req: NextRequest) {
         autorId: session.perfilId,
         conteudo: body.conteudo,
         cor: body.cor ?? 'amarelo',
-        posicaoX: body.posicao_x ?? 0,
-        posicaoY: body.posicao_y ?? 0,
-        rotacao: body.rotacao ?? 0,
       })
       .returning();
     return NextResponse.json(row, { status: 201 });

@@ -1,26 +1,31 @@
 import Link from 'next/link';
 import { Heart, ChevronRight, Lock } from 'lucide-react';
 import { calcularCronometro } from '@/server/services/cronometro';
-import { listarFotos } from '@/server/services/fotos';
+import { listarFotos, listarFotosPorDataTirada } from '@/server/services/fotos';
 import { listarCapsulas } from '@/server/services/capsulas';
-import { listarRecados, mapaPerfis, nomesCasal } from '@/server/queries';
+import { listarRecados, mapaPerfis, nomesCasal, obterCartaSecreta } from '@/server/queries';
 import { DatingTimer } from '@/components/dashboard/DatingTimer';
+import { SecretLetter } from '@/components/dashboard/SecretLetter';
 import { MolecularField } from '@/components/brand/MolecularField';
 import { PhotoImage } from '@/components/album/PhotoImage';
+import { RandomPhotoButton } from '@/components/album/RandomPhotoButton';
+import type { FotoItem } from '@/components/album/types';
 import { hexDaCor } from '@/lib/colors';
 import { dataExtenso, diasAte, tempoRelativo } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const [cron, nomes, fotosRes, recadosTodos, capsulas, perfilNome] =
+  const [cron, nomes, fotosRes, fotosTodas, recadosTodos, capsulas, perfilNome, secretLetter] =
     await Promise.all([
       calcularCronometro(),
       nomesCasal(),
       listarFotos({ limit: 6 }),
+      listarFotosPorDataTirada(),
       listarRecados(),
       listarCapsulas(),
       mapaPerfis(),
+      obterCartaSecreta(),
     ]);
 
   const recados = recadosTodos.slice(0, 3);
@@ -29,6 +34,12 @@ export default async function DashboardPage() {
     .sort((a, b) => a.dataDesbloqueio.getTime() - b.dataDesbloqueio.getTime())[0];
 
   const [a, b] = nomes;
+  const fotosAleatorias: FotoItem[] = fotosTodas.map((f) => ({
+    id: f.id,
+    legenda: f.legenda,
+    tiradaEm: f.tiradaEm ? f.tiradaEm.toISOString() : null,
+    uploadedAt: f.uploadedAt.toISOString(),
+  }));
 
   return (
     <div className="page shell fade-in">
@@ -67,9 +78,12 @@ export default async function DashboardPage() {
         <div>
           <div className="section-h">
             <h3>Fotos recentes</h3>
-            <Link className="link-more" href="/album">
-              Ver álbum <ChevronRight size={15} />
-            </Link>
+            <div className="section-actions">
+              <RandomPhotoButton fotos={fotosAleatorias} className="link-more random-link" />
+              <Link className="link-more" href="/album">
+                Ver álbum <ChevronRight size={15} />
+              </Link>
+            </div>
           </div>
           {fotosRes.items.length > 0 ? (
             <div className="mini-gallery">
@@ -152,6 +166,8 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
+
+      <SecretLetter destinataria={b ?? 'meu amor'} letter={secretLetter} />
     </div>
   );
 }

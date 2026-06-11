@@ -16,7 +16,6 @@ export default async function BoardPage() {
     conteudo: r.conteudo,
     cor: r.cor,
     autorId: r.autorId,
-    rotacao: r.rotacao,
     createdAt: r.createdAt.toISOString(),
   }));
 

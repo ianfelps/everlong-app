@@ -12,7 +12,6 @@ export const runtime = 'nodejs';
 
 const patchSchema = z.object({
   legenda: z.string().max(500).nullable().optional(),
-  fase_id: z.string().uuid().nullable().optional(),
   tirada_em: z.string().datetime().nullable().optional(),
 });
 
@@ -43,7 +42,6 @@ export async function PATCH(
     const body = patchSchema.parse(await req.json());
     const row = await atualizarFoto(id, {
       legenda: body.legenda,
-      faseId: body.fase_id,
       tiradaEm:
         body.tirada_em === undefined
           ? undefined

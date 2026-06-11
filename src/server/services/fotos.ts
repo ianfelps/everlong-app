@@ -17,7 +17,6 @@ export const FotoLimits = { MAX_BYTES, ALLOWED } as const;
 export type CriarFotoInput = {
   file: File;
   autorId: string;
-  faseId: string | null;
   legenda: string | null;
   tiradaEm: Date | null;
 };
@@ -36,7 +35,6 @@ export async function criarFoto(input: CriarFotoInput) {
       .values({
         driveFileId,
         autorId: input.autorId,
-        faseId: input.faseId,
         mimeType: input.file.type,
         tamanhoBytes: BigInt(size),
         legenda: input.legenda,
@@ -54,14 +52,12 @@ export async function criarFoto(input: CriarFotoInput) {
 }
 
 export type ListarFotosInput = {
-  faseId?: string;
   limit: number;
   cursor?: { uploadedAt: Date; id: string };
 };
 
 export async function listarFotos(input: ListarFotosInput) {
   const conds = [];
-  if (input.faseId) conds.push(eq(fotos.faseId, input.faseId));
   if (input.cursor) {
     conds.push(
       or(
@@ -119,14 +115,12 @@ export async function obterFoto(id: string) {
 
 export type AtualizarFotoInput = {
   legenda?: string | null;
-  faseId?: string | null;
   tiradaEm?: Date | null;
 };
 
 export async function atualizarFoto(id: string, input: AtualizarFotoInput) {
   const patch: Record<string, unknown> = {};
   if (input.legenda !== undefined) patch.legenda = input.legenda;
-  if (input.faseId !== undefined) patch.faseId = input.faseId;
   if (input.tiradaEm !== undefined) patch.tiradaEm = input.tiradaEm;
   if (Object.keys(patch).length === 0) return obterFoto(id);
 

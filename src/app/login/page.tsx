@@ -7,7 +7,7 @@ import { Logo } from '@/components/brand/Logo';
 import { MolecularField } from '@/components/brand/MolecularField';
 import { apiGet, apiJson, ApiClientError } from '@/lib/api';
 
-type Perfil = { id: string; nome: string; avatarUrl: string | null };
+type Perfil = { id: string; nome: string };
 
 export default function LoginPage() {
   const router = useRouter();

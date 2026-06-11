@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Plus, Heart } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { UploadModal } from './UploadModal';
 import { Lightbox } from './Lightbox';
+import { RandomPhotoButton } from './RandomPhotoButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { mesAno } from '@/lib/format';
 import type { FotoItem } from './types';
@@ -30,8 +31,10 @@ function AlbumPhotoCard({
       const grid = el.parentElement;
       const styles = grid ? window.getComputedStyle(grid) : null;
       const rowGap = styles ? parseFloat(styles.rowGap || '0') : 0;
-      const height = el.getBoundingClientRect().height;
-      const next = Math.ceil((height + rowGap) / (MASONRY_ROW + rowGap));
+      const cssRowHeight = styles ? parseFloat(styles.gridAutoRows || '') : Number.NaN;
+      const rowHeight = Number.isFinite(cssRowHeight) ? cssRowHeight : MASONRY_ROW;
+      const height = el.offsetHeight;
+      const next = Math.ceil((height + rowGap) / (rowHeight + rowGap));
       setSpan(Math.max(1, next));
     };
 
@@ -44,13 +47,10 @@ function AlbumPhotoCard({
   return (
     <div
       ref={ref}
-      className="photo-card pop-in"
+      className="photo-card card-metal-edge pop-in"
       style={{ gridRowEnd: `span ${span}` }}
       onClick={() => onOpen(foto)}
     >
-      <button className="like" onClick={(e) => e.stopPropagation()}>
-        <Heart size={15} color="var(--red)" />
-      </button>
       <img
         src={`/api/fotos/${foto.id}/binario`}
         alt={foto.legenda ?? 'foto do álbum'}
@@ -98,9 +98,12 @@ export function AlbumGrid({ fotos }: { fotos: FotoItem[] }) {
             onChange={(e) => setBusca(e.target.value)}
           />
         </div>
-        <button className="btn btn-primary" onClick={() => setUpload(true)}>
-          <Plus size={16} /> Adicionar foto
-        </button>
+        <div className="album-actions">
+          <RandomPhotoButton fotos={filtradas} />
+          <button className="btn btn-primary" onClick={() => setUpload(true)}>
+            <Plus size={16} /> Adicionar foto
+          </button>
+        </div>
       </div>
 
       {fotos.length === 0 ? (

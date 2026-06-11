@@ -13,7 +13,6 @@ export async function GET() {
       .select({
         id: perfis.id,
         nome: perfis.nome,
-        avatarUrl: perfis.avatarUrl,
       })
       .from(perfis)
       .where(eq(perfis.id, sess.perfilId))

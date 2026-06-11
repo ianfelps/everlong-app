@@ -12,9 +12,6 @@ const patchSchema = z.object({
   titulo: z.string().min(1).max(200).optional(),
   descricao: z.string().max(5000).nullable().optional(),
   data_evento: z.string().datetime().optional(),
-  icone: z.string().max(40).nullable().optional(),
-  fase_id: z.string().uuid().nullable().optional(),
-  foto_id: z.string().uuid().nullable().optional(),
 });
 
 export async function PATCH(
@@ -30,9 +27,6 @@ export async function PATCH(
     if (body.descricao !== undefined) patch.descricao = body.descricao;
     if (body.data_evento !== undefined)
       patch.dataEvento = new Date(body.data_evento);
-    if (body.icone !== undefined) patch.icone = body.icone;
-    if (body.fase_id !== undefined) patch.faseId = body.fase_id;
-    if (body.foto_id !== undefined) patch.fotoId = body.foto_id;
 
     const [row] = await db
       .update(eventos)
