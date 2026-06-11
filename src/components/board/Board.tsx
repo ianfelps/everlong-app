@@ -97,7 +97,7 @@ export function Board({
       <div className="page-head">
         <h1 className="page-title">Mural de recados</h1>
         <p className="page-sub">
-          deixe um bilhete onde o outro vai sorrir ao encontrar. Os recados aparecem para os dois.
+          Deixe uma frase pequena para o outro encontrar no meio do dia.
         </p>
         <div className="board-filters" aria-label="Ordenar recados">
           <button
@@ -137,7 +137,7 @@ export function Board({
           ))}
           {notes.length === 0 && (
             <p className="mono" style={{ color: 'var(--ink-faint)' }}>
-              nenhum recado ainda — cole o primeiro.
+              nenhum recado ainda — deixa o primeiro aqui.
             </p>
           )}
         </div>
@@ -156,7 +156,7 @@ export function Board({
           ))}
         </div>
         <input
-          placeholder="Escreva um recado para o mural…"
+          placeholder="Escreva um bilhete rápido…"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {

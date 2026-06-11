@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { mesAno } from '@/lib/format';
 import type { FotoItem } from './types';
 
-const POEMA_ALBUM = 'guardar a luz de um dia comum até ele virar lembrança';
+const POEMA_ALBUM = 'guardar a luz de um dia comum para voltar nela depois';
 const MASONRY_ROW = 8;
 
 function AlbumPhotoCard({
@@ -85,7 +85,8 @@ export function AlbumGrid({ fotos }: { fotos: FotoItem[] }) {
       <div className="page-head">
         <h1 className="page-title">Nosso álbum</h1>
         <p className="page-sub">
-          Cada quadro é um dia que a gente não quer esquecer. {fotos.length} memórias guardadas.
+          Um lugar para as fotos que ainda dizem alguma coisa quando a gente olha de novo.{' '}
+          {fotos.length} lembranças por aqui.
         </p>
       </div>
 
@@ -109,7 +110,7 @@ export function AlbumGrid({ fotos }: { fotos: FotoItem[] }) {
       {fotos.length === 0 ? (
         <EmptyState
           line={POEMA_ALBUM}
-          title="O álbum ainda está em branco"
+          title="Ainda não tem foto aqui"
           cta="Adicionar a primeira foto"
           onCta={() => setUpload(true)}
         />

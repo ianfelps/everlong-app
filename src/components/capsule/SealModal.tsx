@@ -49,7 +49,7 @@ export function SealModal({
     <ModalPortal onClose={onClose}>
       <div className="modal card pop-in" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>Selar nova mensagem</h3>
+          <h3>Guardar uma carta</h3>
           <button className="modal-x" onClick={onClose}>
             <X size={18} />
           </button>
@@ -59,7 +59,7 @@ export function SealModal({
             <label>Título</label>
             <input
               type="text"
-              placeholder="Carta para nós em 10 anos…"
+              placeholder="Para a gente ler quando sentir saudade…"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
             />
@@ -68,13 +68,13 @@ export function SealModal({
             <label>Mensagem</label>
             <textarea
               rows={4}
-              placeholder="Escreva o que só deve ser lido lá na frente…"
+              placeholder="Escreva sem pressa, como se o futuro estivesse escutando…"
               value={conteudo}
               onChange={(e) => setConteudo(e.target.value)}
             />
           </div>
           <div className="field">
-            <label>Abrir em</label>
+            <label>Quando abrir</label>
             <input
               type="datetime-local"
               value={quando}
@@ -126,7 +126,7 @@ export function SealModal({
             onClick={selar}
             disabled={enviando || !titulo.trim() || !conteudo.trim() || !quando}
           >
-            <Lock size={16} /> {enviando ? 'Selando…' : 'Selar cápsula'}
+            <Lock size={16} /> {enviando ? 'Guardando…' : 'Guardar para depois'}
           </button>
         </div>
       </div>

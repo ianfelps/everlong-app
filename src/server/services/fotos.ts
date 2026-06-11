@@ -108,6 +108,15 @@ export async function listarFotosPorDataTirada() {
     );
 }
 
+export async function obterFotoAleatoria() {
+  const [row] = await db
+    .select()
+    .from(fotos)
+    .orderBy(sql`random()`)
+    .limit(1);
+  return row ?? null;
+}
+
 export async function obterFoto(id: string) {
   const [row] = await db.select().from(fotos).where(eq(fotos.id, id)).limit(1);
   return row ?? null;

@@ -10,7 +10,7 @@ import { TimelineAdd } from '@/components/timeline/TimelineAdd';
 
 export const dynamic = 'force-dynamic';
 
-const POEMA = 'cada data uma pequena órbita ao redor de nós';
+const POEMA = 'tem dias que ficam morando na gente';
 
 export default async function TimelinePage() {
   const [rows, fotosRows] = await Promise.all([
@@ -42,8 +42,8 @@ export default async function TimelinePage() {
           A linha do tempo
         </h1>
         <p className="page-sub" style={{ margin: '8px auto 0' }}>
-          Marcos da história de vocês — o primeiro encontro, uma viagem, uma data. Cada um vira um
-          ponto na linha.
+          Os momentos que a gente gosta de voltar para visitar: um começo, uma viagem, uma frase,
+          um dia que ficou diferente dos outros.
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
           <TimelineAdd />
@@ -53,8 +53,8 @@ export default async function TimelinePage() {
       {timeline.length === 0 ? (
         <EmptyState
           line={POEMA}
-          title="A história ainda não tem capítulos"
-          hint="Use “Adicionar marco” acima para criar o primeiro evento."
+          title="Ainda não tem nenhum dia guardado aqui"
+          hint="Use “Adicionar marco” para colocar o primeiro pedacinho da nossa história."
         />
       ) : (
         <div className="tl">
@@ -69,7 +69,7 @@ export default async function TimelinePage() {
           ))}
           <div style={{ textAlign: 'center', marginTop: 8 }}>
             <p className="serif-note" style={{ color: 'var(--red)', fontSize: 22, marginTop: 6 }}>
-              … e a história continua
+              ... e a gente continua
             </p>
           </div>
         </div>

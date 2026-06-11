@@ -1,31 +1,45 @@
 import Link from 'next/link';
 import { Heart, ChevronRight, Lock } from 'lucide-react';
 import { calcularCronometro } from '@/server/services/cronometro';
-import { listarFotos, listarFotosPorDataTirada } from '@/server/services/fotos';
+import { listarFotos } from '@/server/services/fotos';
 import { listarCapsulas } from '@/server/services/capsulas';
-import { listarRecados, mapaPerfis, nomesCasal, obterCartaSecreta } from '@/server/queries';
+import {
+  listarRecados,
+  mapaPerfis,
+  nomesCasal,
+  obterCartaSecreta,
+  obterSpotifyPlaylistId,
+} from '@/server/queries';
 import { DatingTimer } from '@/components/dashboard/DatingTimer';
 import { SecretLetter } from '@/components/dashboard/SecretLetter';
 import { MolecularField } from '@/components/brand/MolecularField';
 import { PhotoImage } from '@/components/album/PhotoImage';
 import { RandomPhotoButton } from '@/components/album/RandomPhotoButton';
-import type { FotoItem } from '@/components/album/types';
 import { hexDaCor } from '@/lib/colors';
 import { dataExtenso, diasAte, tempoRelativo } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const [cron, nomes, fotosRes, fotosTodas, recadosTodos, capsulas, perfilNome, secretLetter] =
+  const [
+    cron,
+    nomes,
+    fotosRes,
+    recadosTodos,
+    capsulas,
+    perfilNome,
+    secretLetter,
+    spotifyPlaylistId,
+  ] =
     await Promise.all([
       calcularCronometro(),
       nomesCasal(),
       listarFotos({ limit: 6 }),
-      listarFotosPorDataTirada(),
       listarRecados(),
       listarCapsulas(),
       mapaPerfis(),
       obterCartaSecreta(),
+      obterSpotifyPlaylistId(),
     ]);
 
   const recados = recadosTodos.slice(0, 3);
@@ -34,12 +48,6 @@ export default async function DashboardPage() {
     .sort((a, b) => a.dataDesbloqueio.getTime() - b.dataDesbloqueio.getTime())[0];
 
   const [a, b] = nomes;
-  const fotosAleatorias: FotoItem[] = fotosTodas.map((f) => ({
-    id: f.id,
-    legenda: f.legenda,
-    tiradaEm: f.tiradaEm ? f.tiradaEm.toISOString() : null,
-    uploadedAt: f.uploadedAt.toISOString(),
-  }));
 
   return (
     <div className="page shell fade-in">
@@ -49,7 +57,7 @@ export default async function DashboardPage() {
           style={{ maskImage: 'linear-gradient(90deg,transparent,#000 60%)' }}
         />
         <div className="hero-grid">
-          <span className="eyebrow">Cronômetro de namoro</span>
+          <span className="eyebrow">Nosso tempo juntos</span>
           <p className="hero-names">
             {a && b ? (
               <>
@@ -68,18 +76,39 @@ export default async function DashboardPage() {
               <b style={{ color: '#fff' }}>
                 {cron.total_dias.toLocaleString('pt-BR')}
               </b>{' '}
-              dias girando na mesma órbita.
+              dias desde que a gente começou a contar junto.
             </span>
           </div>
         </div>
       </section>
+
+      {spotifyPlaylistId && (
+        <section className="spotify-card card-metal-edge">
+          <div className="section-h">
+            <h3>Nossa playlist</h3>
+          </div>
+          <iframe
+            title="Playlist do casal no Spotify"
+            className="spotify-iframe"
+            src={`https://open.spotify.com/embed/playlist/${encodeURIComponent(
+              spotifyPlaylistId,
+            )}?utm_source=generator&theme=0&si=240917446531463c`}
+            width="100%"
+            height="352"
+            frameBorder="0"
+            allowFullScreen
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture;"
+            loading="lazy"
+          />
+        </section>
+      )}
 
       <div className="dash-cols">
         <div>
           <div className="section-h">
             <h3>Fotos recentes</h3>
             <div className="section-actions">
-              <RandomPhotoButton fotos={fotosAleatorias} className="link-more random-link" />
+              <RandomPhotoButton className="link-more random-link" />
               <Link className="link-more" href="/album">
                 Ver álbum <ChevronRight size={15} />
               </Link>
@@ -99,7 +128,7 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <p className="mono" style={{ fontSize: 12, color: 'var(--ink-faint)' }}>
-              nenhuma foto ainda — comece o álbum de vocês.
+              nenhuma foto ainda — coloca aqui um dia que vale voltar.
             </p>
           )}
         </div>
@@ -126,7 +155,7 @@ export default async function DashboardPage() {
             ))}
             {recados.length === 0 && (
               <p className="mono" style={{ fontSize: 12, color: 'var(--ink-faint)' }}>
-                o mural ainda está vazio.
+                o mural ainda está esperando o primeiro bilhete.
               </p>
             )}
           </div>
@@ -161,7 +190,7 @@ export default async function DashboardPage() {
             </Link>
           ) : (
             <p className="mono" style={{ fontSize: 12, color: 'var(--ink-faint)' }}>
-              nenhuma cápsula selada.
+              nenhuma carta guardada para depois.
             </p>
           )}
         </div>

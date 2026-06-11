@@ -16,6 +16,7 @@ export const configCasal = pgTable(
     id: boolean('id').primaryKey().default(true),
     dataInicio: timestamp('data_inicio', { withTimezone: true }).notNull(),
     cartaSecreta: text('carta_secreta'),
+    spotifyPlaylistId: text('spotify_playlist_id'),
   },
   (t) => [check('chk_config_singleton', sql`${t.id} = true`)],
 );
