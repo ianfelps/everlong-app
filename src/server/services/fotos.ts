@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, desc, eq, lt, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, lt, or, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { fotos } from '@/server/db/schema';
 import { deleteFoto, uploadFoto } from './drive';
@@ -109,11 +109,18 @@ export async function listarFotosPorDataTirada() {
 }
 
 export async function obterFotoAleatoria() {
+  const [resultado] = await db
+    .select({ total: count() })
+    .from(fotos);
+  const total = resultado?.total ?? 0;
+  if (total === 0) return null;
+
+  const indice = Math.floor(Math.random() * total);
   const [row] = await db
     .select()
     .from(fotos)
-    .orderBy(sql`random()`)
-    .limit(1);
+    .limit(1)
+    .offset(indice);
   return row ?? null;
 }
 

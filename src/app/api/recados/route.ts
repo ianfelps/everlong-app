@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { asc, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/server/db';
 import { recados } from '@/server/db/schema';
 import { handle } from '@/server/lib/http';
 import { requireSession } from '@/server/lib/session';
+import { listarRecados } from '@/server/queries';
 
 export const runtime = 'nodejs';
 
@@ -22,10 +22,7 @@ export async function GET(req: NextRequest) {
     await requireSession();
     const url = new URL(req.url);
     const q = querySchema.parse(Object.fromEntries(url.searchParams));
-    return db
-      .select()
-      .from(recados)
-      .orderBy(q.order === 'asc' ? asc(recados.createdAt) : desc(recados.createdAt));
+    return listarRecados(q.order);
   });
 }
 

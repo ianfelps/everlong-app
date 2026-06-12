@@ -505,8 +505,16 @@ export const openapiSpec = {
       },
       delete: {
         tags: ['capsulas'],
+        summary: 'Exclui uma cápsula já aberta',
         security: [{ cookieAuth: [] }],
-        responses: { 204: { $ref: '#/components/responses/NoContent' }, 404: { $ref: '#/components/responses/NotFound' } },
+        responses: {
+          204: { $ref: '#/components/responses/NoContent' },
+          409: {
+            description: 'A cápsula ainda não foi aberta',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          404: { $ref: '#/components/responses/NotFound' },
+        },
       },
     },
     '/api/capsulas/{id}/fotos/{fotoId}/binario': {
@@ -532,6 +540,7 @@ export const openapiSpec = {
     '/api/recados': {
       get: {
         tags: ['recados'],
+        summary: 'Até 8 recados criados nos últimos 7 dias',
         security: [{ cookieAuth: [] }],
         parameters: [
           {

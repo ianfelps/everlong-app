@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Pencil } from 'lucide-react';
+import { PhotoImage } from '@/components/album/PhotoImage';
 import { MetalSphere } from '@/components/brand/MetalSphere';
 import { EventModal } from './EventModal';
 import { dataCurta } from '@/lib/format';
@@ -77,10 +78,14 @@ export function TimelineItem({
         </button>
       ) : (
         <div className="tl-bubble tl-photo-bubble card-metal-edge">
-          <img
-            src={`/api/fotos/${ev.id}/binario`}
-            alt={ev.legenda ?? 'foto registrada na linha do tempo'}
+          <PhotoImage
+            id={ev.id}
+            legenda={ev.legenda}
             className="tl-photo"
+            imageClassName="tl-photo-image"
+            mode="natural"
+            fit="contain"
+            imageStyle={{ maxHeight: 420, margin: '0 auto' }}
           />
           <div className="tl-date">{dataCurta(ev.dataEvento)}</div>
           <h4>{ev.legenda ?? 'Foto registrada'}</h4>

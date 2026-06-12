@@ -24,6 +24,7 @@ export function CapsuleGrid({ caps }: { caps: CapItem[] }) {
   const [seal, setSeal] = useState(false);
 
   async function abrir(cap: CapItem) {
+    if (carregando) return;
     setAberta(true);
     setReader(null);
     setCarregando(true);
@@ -78,6 +79,11 @@ export function CapsuleGrid({ caps }: { caps: CapItem[] }) {
           cap={reader}
           carregando={carregando}
           onClose={() => setAberta(false)}
+          onDeleted={() => {
+            setAberta(false);
+            setReader(null);
+            router.refresh();
+          }}
         />
       )}
       {seal && (

@@ -52,11 +52,15 @@ export function UploadModal({
   const stage = file ? 'preview' : 'drop';
 
   return (
-    <ModalPortal onClose={onClose}>
-      <div className="modal card pop-in" onClick={(e) => e.stopPropagation()}>
+    <ModalPortal onClose={enviando ? () => undefined : onClose}>
+      <div
+        className="modal card pop-in"
+        onClick={(e) => e.stopPropagation()}
+        aria-busy={enviando}
+      >
         <div className="modal-head">
           <h3>Adicionar foto</h3>
-          <button className="modal-x" onClick={onClose}>
+          <button className="modal-x" onClick={onClose} disabled={enviando}>
             <X size={18} />
           </button>
         </div>
@@ -140,7 +144,7 @@ export function UploadModal({
           {erro && <div className="login-error">{erro}</div>}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-ghost" onClick={onClose}>
+          <button className="btn btn-ghost" onClick={onClose} disabled={enviando}>
             Cancelar
           </button>
           {stage === 'drop' ? (

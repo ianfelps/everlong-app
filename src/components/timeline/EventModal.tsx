@@ -75,11 +75,15 @@ export function EventModal({
   }
 
   return (
-    <ModalPortal onClose={onClose}>
-      <div className="modal card pop-in" onClick={(e) => e.stopPropagation()}>
+    <ModalPortal onClose={busy ? () => undefined : onClose}>
+      <div
+        className="modal card pop-in"
+        onClick={(e) => e.stopPropagation()}
+        aria-busy={busy}
+      >
         <div className="modal-head">
           <h3>{mode === 'create' ? 'Guardar um dia' : 'Editar lembrança'}</h3>
-          <button className="modal-x" onClick={onClose}>
+          <button className="modal-x" onClick={onClose} disabled={busy}>
             <X size={18} />
           </button>
         </div>

@@ -50,6 +50,7 @@ export function RandomPhotoButton({
         className={className}
         onClick={sortear}
         disabled={disabled}
+        aria-busy={busy}
       >
         <Shuffle size={16} /> {busy ? 'Sorteando...' : 'Foto aleatória'}
       </button>
