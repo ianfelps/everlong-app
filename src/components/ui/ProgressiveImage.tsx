@@ -36,7 +36,7 @@ export function ProgressiveImage({
   fit = 'cover',
   priority = false,
   mode = 'fill',
-  fallbackLabel = 'Imagem indisponivel',
+  fallbackLabel = 'Imagem indisponível',
   onStateChange,
   onReady,
   decoding = 'async',

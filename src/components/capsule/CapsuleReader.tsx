@@ -76,7 +76,7 @@ export function CapsuleReader({
         <div className="modal-body">
           {carregando || !cap ? (
             <div className="inline-loading" role="status">
-              <LoadingSpinner label="Abrindo capsula" />
+              <LoadingSpinner label="Abrindo cápsula" />
               <span className="mono">abrindo a cápsula…</span>
             </div>
           ) : (
@@ -100,7 +100,7 @@ export function CapsuleReader({
                       className="capsule-photo"
                       src={`/api/capsulas/${cap.id}/fotos/${foto.id}/binario`}
                       alt={foto.legenda ?? 'foto da cápsula'}
-                      fallbackLabel="foto indisponivel"
+                      fallbackLabel="foto indisponível"
                     />
                   ))}
                 </div>
@@ -137,7 +137,7 @@ export function CapsuleReader({
                     disabled={excluindo}
                   >
                     {excluindo ? (
-                      <LoadingSpinner label="Excluindo capsula" />
+                      <LoadingSpinner label="Excluindo cápsula" />
                     ) : (
                       <Trash2 size={15} />
                     )}
