@@ -45,7 +45,7 @@ export default function LoginPage() {
         <div style={{ position: 'relative', zIndex: 2 }}>
           <Logo size={56} />
           <p className="page-sub" style={{ margin: '14px auto 0', color: 'var(--ink-dim)' }}>
-            Entre para abrir as memórias de vocês.
+            Entre devagar. As nossas memórias estão aqui dentro.
           </p>
 
           <div className="login-profiles">

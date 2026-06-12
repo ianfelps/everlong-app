@@ -538,6 +538,25 @@
     grid-template-columns: 1.3fr 1fr;
     gap: 22px;
   }
+  .spotify-card {
+    overflow: hidden;
+    margin-bottom: 30px;
+    padding: 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--hairline);
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    box-shadow: var(--shadow-card);
+  }
+  .spotify-card .section-h {
+    margin-bottom: 12px;
+  }
+  .spotify-iframe {
+    display: block;
+    width: 100%;
+    border: 0;
+    border-radius: 12px;
+    background: var(--petrol-950);
+  }
   .section-h {
     display: flex;
     align-items: center;
@@ -634,6 +653,7 @@
   }
   .secret-letter .modal-body p {
     margin: 0 0 14px;
+    white-space: pre-line;
   }
   .secret-letter .modal-body p:first-child,
   .secret-letter .modal-body p:last-child {

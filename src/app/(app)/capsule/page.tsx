@@ -5,7 +5,7 @@ import type { CapItem } from '@/components/capsule/types';
 
 export const dynamic = 'force-dynamic';
 
-const POEMA = 'algumas palavras pedem para esperar o tempo certo';
+const POEMA = 'Algumas palavras precisam dormir um pouco antes de chegar';
 
 export default async function CapsulePage() {
   const [rows, perfilNome] = await Promise.all([listarCapsulas(), mapaPerfis()]);
@@ -25,7 +25,7 @@ export default async function CapsulePage() {
       <div className="page-head">
         <h1 className="page-title">Cápsula do tempo</h1>
         <p className="page-sub">
-          {POEMA}. Mensagens que vocês escreveram para abrir só quando chegar a hora.
+          {POEMA}. Cartas, fotos e promessas pequenas para a gente encontrar mais adiante.
         </p>
       </div>
       <CapsuleGrid caps={caps} />

@@ -26,6 +26,14 @@ export async function obterCartaSecreta(): Promise<string | null> {
   return row?.cartaSecreta ?? null;
 }
 
+export async function obterSpotifyPlaylistId(): Promise<string | null> {
+  const [row] = await db
+    .select({ spotifyPlaylistId: configCasal.spotifyPlaylistId })
+    .from(configCasal)
+    .limit(1);
+  return row?.spotifyPlaylistId?.trim() || null;
+}
+
 export async function listarRecados() {
   return db.select().from(recados).orderBy(desc(recados.createdAt));
 }

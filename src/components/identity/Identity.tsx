@@ -18,27 +18,27 @@ const FEATURES: { icon: LucideIcon; titulo: string; texto: string }[] = [
   {
     icon: Clock,
     titulo: 'Cronômetro de namoro',
-    texto: 'Cada segundo desde o primeiro dia, girando na mesma órbita.',
+    texto: 'O tempo que passou desde que a gente virou nós.',
   },
   {
     icon: Images,
     titulo: 'Álbum',
-    texto: 'Cada foto é um dia que vocês não querem esquecer.',
+    texto: 'Fotos pequenas, dias enormes, lembranças que ainda aquecem.',
   },
   {
     icon: GitCommitVertical,
     titulo: 'Linha do tempo',
-    texto: 'Os capítulos da história de vocês, em ordem.',
+    texto: 'Os dias que mudaram alguma coisa dentro da gente.',
   },
   {
     icon: Lock,
     titulo: 'Cápsula do tempo',
-    texto: 'Mensagens seladas para abrir só quando chegar a hora.',
+    texto: 'Cartas guardadas para quando o futuro chamar pelo nosso nome.',
   },
   {
     icon: MessageSquare,
     titulo: 'Mural de recados',
-    texto: 'Bilhetes que aparecem para os dois, em tempo real.',
+    texto: 'Bilhetes rápidos, do tipo que dá vontade de encontrar sem aviso.',
   },
 ];
 
@@ -48,19 +48,19 @@ export function Identity({ enterHref }: { enterHref: string }) {
       <section className="lp-hero card-metal-edge">
         <MolecularField opacity={0.16} />
         <div className="lp-hero-inner">
-          <span className="eyebrow">Álbum de memórias de casal</span>
+          <span className="eyebrow">um lugar só nosso</span>
           <Logo size={104} className="lp-logo" />
-          <p className="lp-tagline serif-note">O tempo de vocês, guardado para sempre.</p>
+          <p className="lp-tagline serif-note">Um canto quieto para guardar o que a gente vive.</p>
           <p className="page-sub lp-sub">
-            Um cantinho só de vocês dois. Fotos, recados, a linha do tempo da relação e cápsulas
-            para abrir no futuro — todas as memórias guardadas em um só lugar.
+            Aqui ficam as fotos que ainda fazem a gente sorrir, os recados deixados no meio do dia,
+            as datas que viraram lembrança e as cartas que a gente só quer abrir quando chegar a hora.
           </p>
           <div className="lp-actions">
             <Link href={enterHref} className="btn btn-primary lp-cta">
               <Heart size={17} color="#fff" /> Entrar no Everlong
             </Link>
             <a href="#recursos" className="btn btn-ghost lp-cta">
-              Conhecer
+              Ver por dentro
             </a>
           </div>
         </div>
@@ -68,8 +68,8 @@ export function Identity({ enterHref }: { enterHref: string }) {
 
       <section id="recursos" className="lp-section">
         <div className="lp-section-head">
-          <span className="eyebrow">O que tem dentro</span>
-          <h2 className="lp-h2">Tudo que vale a pena lembrar</h2>
+          <span className="eyebrow">guardado com calma</span>
+          <h2 className="lp-h2">As partes pequenas do nosso jeito</h2>
         </div>
         <div className="lp-features">
           {FEATURES.map((f) => {
@@ -88,8 +88,8 @@ export function Identity({ enterHref }: { enterHref: string }) {
             <div className="feature-orb">
               <MetalSphere size={48} />
             </div>
-            <h4>Começar agora</h4>
-            <p>Abra o álbum de vocês e veja o cronômetro correndo.</p>
+            <h4>Entrar no nosso canto</h4>
+            <p>Abra as memórias e deixe o tempo continuar passando aqui dentro.</p>
           </Link>
         </div>
       </section>

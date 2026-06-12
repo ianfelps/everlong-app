@@ -78,7 +78,7 @@ export function EventModal({
     <ModalPortal onClose={onClose}>
       <div className="modal card pop-in" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>{mode === 'create' ? 'Novo marco' : 'Editar marco'}</h3>
+          <h3>{mode === 'create' ? 'Guardar um dia' : 'Editar lembrança'}</h3>
           <button className="modal-x" onClick={onClose}>
             <X size={18} />
           </button>
@@ -88,16 +88,16 @@ export function EventModal({
             <label>Título</label>
             <input
               type="text"
-              placeholder="O primeiro encontro…"
+              placeholder="Aquele dia no café…"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
             />
           </div>
           <div className="field">
-            <label>O que aconteceu</label>
+            <label>O que ficou desse dia</label>
             <textarea
               rows={3}
-              placeholder="Conte esse momento da história de vocês…"
+              placeholder="Escreva do jeito que você lembraria contando baixinho…"
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
             />
