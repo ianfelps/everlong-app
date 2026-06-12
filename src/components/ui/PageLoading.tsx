@@ -5,7 +5,7 @@ export function PageLoading({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`page-loading ${compact ? 'is-compact' : ''}`} aria-busy="true">
       <div className="page-loading-head">
-        <LoadingSpinner size={18} label="Carregando pagina" />
+        <LoadingSpinner size={18} label="Carregando página" />
         <Skeleton style={{ width: 220, height: 28 }} />
         <Skeleton style={{ width: 'min(480px, 82vw)', height: 14 }} />
       </div>

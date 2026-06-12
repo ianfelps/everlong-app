@@ -112,13 +112,14 @@ export async function obterFotoAleatoria() {
   const [resultado] = await db
     .select({ total: count() })
     .from(fotos);
-  const total = resultado?.total ?? 0;
-  if (total === 0) return null;
+  const total = Number(resultado?.total ?? 0);
+  if (!Number.isFinite(total) || total <= 0) return null;
 
   const indice = Math.floor(Math.random() * total);
   const [row] = await db
     .select()
     .from(fotos)
+    .orderBy(asc(fotos.id))
     .limit(1)
     .offset(indice);
   return row ?? null;

@@ -38,8 +38,8 @@ export function PhotoImage({
   return (
     <ProgressiveImage
       src={`/api/fotos/${id}/binario`}
-      alt={legenda ?? 'foto do album'}
-      fallbackLabel={label ?? legenda ?? 'memoria'}
+      alt={legenda ?? 'foto do álbum'}
+      fallbackLabel={label ?? legenda ?? 'memória'}
       className={className}
       imageClassName={imageClassName}
       style={style}

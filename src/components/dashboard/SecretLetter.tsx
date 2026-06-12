@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Mail, X } from 'lucide-react';
 import { ModalPortal } from '@/components/ui/ModalPortal';
+import { renderInlineMarkdown } from '@/lib/inline-markdown';
 
 export function SecretLetter({
   destinataria = 'meu amor',
@@ -45,7 +46,7 @@ export function SecretLetter({
             </div>
             <div className="modal-body">
               {paragraphs.map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
+                <p key={index}>{renderInlineMarkdown(paragraph, `paragraph-${index}`)}</p>
               ))}
             </div>
           </div>
