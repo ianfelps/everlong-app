@@ -46,11 +46,15 @@ export function SealModal({
   }
 
   return (
-    <ModalPortal onClose={onClose}>
-      <div className="modal card pop-in" onClick={(e) => e.stopPropagation()}>
+    <ModalPortal onClose={enviando ? () => undefined : onClose}>
+      <div
+        className="modal card pop-in"
+        onClick={(e) => e.stopPropagation()}
+        aria-busy={enviando}
+      >
         <div className="modal-head">
           <h3>Guardar uma carta</h3>
-          <button className="modal-x" onClick={onClose}>
+          <button className="modal-x" onClick={onClose} disabled={enviando}>
             <X size={18} />
           </button>
         </div>
@@ -118,7 +122,7 @@ export function SealModal({
           {erro && <div className="login-error">{erro}</div>}
         </div>
         <div className="modal-foot">
-          <button className="btn btn-ghost" onClick={onClose}>
+          <button className="btn btn-ghost" onClick={onClose} disabled={enviando}>
             Cancelar
           </button>
           <button

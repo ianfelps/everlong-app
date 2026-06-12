@@ -1,5 +1,9 @@
 import 'server-only';
-import { asc, desc } from 'drizzle-orm';
+import { asc, desc, gte } from 'drizzle-orm';
+import {
+  inicioJanelaRecados,
+  RECADO_LIMITE,
+} from '@/lib/recados';
 import { db } from '@/server/db';
 import { configCasal, eventos, perfis, recados } from '@/server/db/schema';
 
@@ -34,8 +38,18 @@ export async function obterSpotifyPlaylistId(): Promise<string | null> {
   return row?.spotifyPlaylistId?.trim() || null;
 }
 
-export async function listarRecados() {
-  return db.select().from(recados).orderBy(desc(recados.createdAt));
+export async function listarRecados(
+  ordem: 'asc' | 'desc' = 'desc',
+  agora: Date = new Date(),
+) {
+  const rows = await db
+    .select()
+    .from(recados)
+    .where(gte(recados.createdAt, inicioJanelaRecados(agora)))
+    .orderBy(desc(recados.createdAt))
+    .limit(RECADO_LIMITE);
+
+  return ordem === 'asc' ? rows.reverse() : rows;
 }
 
 export async function listarEventos() {

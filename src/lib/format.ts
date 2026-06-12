@@ -1,4 +1,6 @@
 const MS_DIA = 86_400_000;
+const MS_HORA = 3_600_000;
+const MS_MINUTO = 60_000;
 
 export function mesAno(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -27,9 +29,25 @@ export function dataCurta(date: Date | string): string {
     .replace('.', '');
 }
 
-export function diasAte(date: Date | string): number {
+export function tempoAte(
+  date: Date | string,
+  agora: Date = new Date(),
+): { valor: number; unidade: string } {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return Math.max(0, Math.ceil((d.getTime() - Date.now()) / MS_DIA));
+  const diff = Math.max(0, d.getTime() - agora.getTime());
+
+  if (diff >= MS_DIA) {
+    const valor = Math.ceil(diff / MS_DIA);
+    return { valor, unidade: valor === 1 ? 'dia' : 'dias' };
+  }
+
+  if (diff >= MS_HORA) {
+    const valor = Math.ceil(diff / MS_HORA);
+    return { valor, unidade: valor === 1 ? 'hora' : 'horas' };
+  }
+
+  const valor = Math.ceil(diff / MS_MINUTO);
+  return { valor, unidade: valor === 1 ? 'minuto' : 'minutos' };
 }
 
 export function tempoRelativo(date: Date | string): string {

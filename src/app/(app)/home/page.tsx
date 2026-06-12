@@ -16,7 +16,7 @@ import { MolecularField } from '@/components/brand/MolecularField';
 import { PhotoImage } from '@/components/album/PhotoImage';
 import { RandomPhotoButton } from '@/components/album/RandomPhotoButton';
 import { hexDaCor } from '@/lib/colors';
-import { dataExtenso, diasAte, tempoRelativo } from '@/lib/format';
+import { dataExtenso, tempoAte, tempoRelativo } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +46,7 @@ export default async function DashboardPage() {
   const proxima = capsulas
     .filter((c) => c.dataDesbloqueio > new Date())
     .sort((a, b) => a.dataDesbloqueio.getTime() - b.dataDesbloqueio.getTime())[0];
+  const tempoProximaCapsula = proxima ? tempoAte(proxima.dataDesbloqueio) : null;
 
   const [a, b] = nomes;
 
@@ -116,11 +117,12 @@ export default async function DashboardPage() {
           </div>
           {fotosRes.items.length > 0 ? (
             <div className="mini-gallery">
-              {fotosRes.items.map((p) => (
+              {fotosRes.items.map((p, index) => (
                 <Link key={p.id} href="/album" className="mini-photo">
                   <PhotoImage
                     id={p.id}
                     legenda={p.legenda}
+                    priority={index < 3}
                     style={{ width: '100%', height: '100%' }}
                   />
                 </Link>
@@ -183,7 +185,7 @@ export default async function DashboardPage() {
                 <div className="note-meta">
                   <span>desbloqueia em</span>
                   <span style={{ color: 'var(--red)' }}>
-                    · {diasAte(proxima.dataDesbloqueio)} dias
+                    · {tempoProximaCapsula?.valor} {tempoProximaCapsula?.unidade}
                   </span>
                 </div>
               </div>

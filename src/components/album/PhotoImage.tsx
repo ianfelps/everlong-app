@@ -1,52 +1,54 @@
 'use client';
 
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
+import {
+  ProgressiveImage,
+  type ImageLoadState,
+} from '@/components/ui/ProgressiveImage';
 
 type Props = {
   id: string;
   legenda?: string | null;
-  
   label?: string;
   className?: string;
+  imageClassName?: string;
   style?: CSSProperties;
+  imageStyle?: CSSProperties;
   fit?: CSSProperties['objectFit'];
+  priority?: boolean;
+  mode?: 'fill' | 'natural';
+  onStateChange?: (state: ImageLoadState) => void;
+  onReady?: (image: HTMLImageElement) => void;
 };
 
-export function PhotoImage({ id, legenda, label, className, style, fit = 'cover' }: Props) {
-  const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
-  const imgRef = useRef<HTMLImageElement>(null);
-  const texto = label ?? legenda ?? 'memória';
-
-  useEffect(() => {
-    setState('loading');
-  }, [id]);
-
-  useEffect(() => {
-    const img = imgRef.current;
-    if (!img) return;
-    if (img.complete && img.naturalWidth > 0) setState('ok');
-    if (img.complete && img.naturalWidth === 0) setState('error');
-  }, [id]);
-
+export function PhotoImage({
+  id,
+  legenda,
+  label,
+  className,
+  imageClassName,
+  style,
+  imageStyle,
+  fit = 'cover',
+  priority = false,
+  mode = 'fill',
+  onStateChange,
+  onReady,
+}: Props) {
   return (
-    <div className={`ph ${className ?? ''}`.trim()} style={style}>
-      <img
-        ref={imgRef}
-        src={`/api/fotos/${id}/binario`}
-        alt={legenda ?? 'foto do álbum'}
-        onLoad={() => setState('ok')}
-        onError={() => setState('error')}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: fit,
-          opacity: state === 'ok' ? 1 : 0,
-          transition: 'opacity .3s ease',
-        }}
-      />
-      {state !== 'ok' && <span className="ph-label">{texto}</span>}
-    </div>
+    <ProgressiveImage
+      src={`/api/fotos/${id}/binario`}
+      alt={legenda ?? 'foto do album'}
+      fallbackLabel={label ?? legenda ?? 'memoria'}
+      className={className}
+      imageClassName={imageClassName}
+      style={style}
+      imageStyle={imageStyle}
+      fit={fit}
+      priority={priority}
+      mode={mode}
+      onStateChange={onStateChange}
+      onReady={onReady}
+    />
   );
 }

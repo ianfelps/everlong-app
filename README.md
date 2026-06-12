@@ -12,7 +12,7 @@
 - **Álbum** — grid masonry, upload com legenda/data, lightbox com editar/excluir. Binários no Google Drive, metadados no Postgres.
 - **Linha do tempo** — marcos da relação alternando lados, criar/editar/excluir evento.
 - **Cápsula do tempo** — mensagens bloqueadas até uma data futura. O conteúdo nunca trafega antes do desbloqueio (`423 Locked`).
-- **Mural de recados** — post-its coloridos com atualização ao vivo via polling (~10s) entre os dois perfis.
+- **Mural de recados** — até 8 post-its dos últimos 7 dias, com atualização ao vivo via polling (~10s) entre os dois perfis.
 
 ---
 
@@ -195,8 +195,8 @@ pnpm drive:init   # cria a pasta raiz no Drive
 | GET  | `/api/cronometro` | Tempo decorrido fragmentado |
 | GET/POST · PATCH/DELETE | `/api/eventos` · `/api/eventos/:id` | Linha do tempo |
 | GET/POST | `/api/capsulas` | Metadata-only na listagem |
-| GET/DELETE | `/api/capsulas/:id` | **423 Locked** antes da `data_desbloqueio` |
-| GET/POST · PATCH/DELETE | `/api/recados` · `/api/recados/:id` | Mural |
+| GET/DELETE | `/api/capsulas/:id` | Leitura dá **423** antes do desbloqueio; exclusão exige abertura prévia |
+| GET/POST · PATCH/DELETE | `/api/recados` · `/api/recados/:id` | Mural; listagem limitada aos 8 recados dos últimos 7 dias |
 
 ---
 

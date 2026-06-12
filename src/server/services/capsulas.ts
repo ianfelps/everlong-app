@@ -1,5 +1,6 @@
 import 'server-only';
-import { and, asc, desc, eq, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, isNull } from 'drizzle-orm';
+import { podeExcluirCapsula } from '@/lib/capsulas';
 import { db } from '@/server/db';
 import { capsulaFotos, capsulas } from '@/server/db/schema';
 import { errors } from '@/server/lib/http';
@@ -157,6 +158,16 @@ export async function obterFotoCapsula(
 }
 
 export async function removerCapsula(id: string): Promise<boolean> {
+  const [capsula] = await db
+    .select({ abertaEm: capsulas.abertaEm })
+    .from(capsulas)
+    .where(eq(capsulas.id, id))
+    .limit(1);
+  if (!capsula) return false;
+  if (!podeExcluirCapsula(capsula.abertaEm)) {
+    throw errors.conflict('a cápsula precisa ser aberta antes de ser excluída');
+  }
+
   const fotos = await db
     .select({ driveFileId: capsulaFotos.driveFileId })
     .from(capsulaFotos)
@@ -164,7 +175,7 @@ export async function removerCapsula(id: string): Promise<boolean> {
 
   const deleted = await db
     .delete(capsulas)
-    .where(eq(capsulas.id, id))
+    .where(and(eq(capsulas.id, id), isNotNull(capsulas.abertaEm)))
     .returning({ id: capsulas.id });
   if (deleted.length === 0) return false;
 

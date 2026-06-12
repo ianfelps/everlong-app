@@ -2,7 +2,7 @@
 
 import { Lock, Unlock, Check } from 'lucide-react';
 import { MolecularField } from '@/components/brand/MolecularField';
-import { dataExtenso, diasAte } from '@/lib/format';
+import { dataExtenso, tempoAte } from '@/lib/format';
 import type { CapItem } from './types';
 
 export function CapCard({
@@ -15,7 +15,7 @@ export function CapCard({
   const locked = new Date(cap.dataDesbloqueio) > new Date();
 
   if (locked) {
-    const d = diasAte(cap.dataDesbloqueio);
+    const tempoRestante = tempoAte(cap.dataDesbloqueio);
     return (
       <div className="cap-card cap-locked card-metal-edge">
         <MolecularField opacity={0.06} className="mol-mark" />
@@ -27,7 +27,7 @@ export function CapCard({
         </div>
         <div className="cap-title">{cap.titulo}</div>
         <div className="cap-count">
-          desbloqueia em <b>{d}</b> {d === 1 ? 'dia' : 'dias'}
+          desbloqueia em <b>{tempoRestante.valor}</b> {tempoRestante.unidade}
         </div>
         <div
           className="mono"

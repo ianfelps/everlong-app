@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation';
 import { Heart, Lock } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
 import { MolecularField } from '@/components/brand/MolecularField';
-import { apiGet, apiJson, ApiClientError } from '@/lib/api';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { ApiClientError, apiGet, apiJson } from '@/lib/api';
 
 type Perfil = { id: string; nome: string };
 
 export default function LoginPage() {
   const router = useRouter();
   const [perfis, setPerfis] = useState<Perfil[]>([]);
+  const [carregandoPerfis, setCarregandoPerfis] = useState(true);
   const [perfilId, setPerfilId] = useState<string | null>(null);
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState<string | null>(null);
@@ -20,55 +23,63 @@ export default function LoginPage() {
   useEffect(() => {
     apiGet<Perfil[]>('/api/perfis')
       .then(setPerfis)
-      .catch(() => setErro('não foi possível carregar os perfis'));
+      .catch(() => setErro('não foi possível carregar os perfis'))
+      .finally(() => setCarregandoPerfis(false));
   }, []);
 
   async function entrar() {
-    if (!perfilId || !senha) return;
+    if (!perfilId || !senha || enviando) return;
     setEnviando(true);
     setErro(null);
     try {
       await apiJson('/api/auth/login', 'POST', { perfil_id: perfilId, senha });
       router.push('/home');
       router.refresh();
-    } catch (e) {
-      const msg = e instanceof ApiClientError ? e.message : 'falha ao entrar';
-      setErro(msg);
+    } catch (error) {
+      const message =
+        error instanceof ApiClientError ? error.message : 'falha ao entrar';
+      setErro(message);
       setEnviando(false);
     }
   }
 
   return (
     <div className="login-wrap">
-      <div className="login-card card card-metal-edge fade-in">
+      <div
+        className="login-card card card-metal-edge fade-in"
+        aria-busy={carregandoPerfis || enviando}
+      >
         <MolecularField opacity={0.08} />
         <div style={{ position: 'relative', zIndex: 2 }}>
           <Logo size={56} />
-          <p className="page-sub" style={{ margin: '14px auto 0', color: 'var(--ink-dim)' }}>
+          <p
+            className="page-sub"
+            style={{ margin: '14px auto 0', color: 'var(--ink-dim)' }}
+          >
             Entre devagar. As nossas memórias estão aqui dentro.
           </p>
 
           <div className="login-profiles">
-            {perfis.map((p) => (
-              <button
-                key={p.id}
-                className={`profile-btn ${perfilId === p.id ? 'on' : ''}`}
-                onClick={() => {
-                  setPerfilId(p.id);
-                  setErro(null);
-                }}
-              >
-                <span className="nav-avatar" style={{ width: 32, height: 32 }}>
-                  <Heart size={13} color="var(--red)" />
-                </span>
-                {p.nome}
-              </button>
-            ))}
-            {perfis.length === 0 && !erro && (
-              <span className="mono" style={{ fontSize: 12, color: 'var(--ink-faint)' }}>
-                carregando perfis…
-              </span>
-            )}
+            {carregandoPerfis
+              ? Array.from({ length: 2 }, (_, index) => (
+                  <Skeleton key={index} style={{ height: 58, width: '100%' }} />
+                ))
+              : perfis.map((perfil) => (
+                  <button
+                    key={perfil.id}
+                    className={`profile-btn ${perfilId === perfil.id ? 'on' : ''}`}
+                    onClick={() => {
+                      setPerfilId(perfil.id);
+                      setErro(null);
+                    }}
+                    disabled={enviando}
+                  >
+                    <span className="nav-avatar" style={{ width: 32, height: 32 }}>
+                      <Heart size={13} color="var(--red)" />
+                    </span>
+                    {perfil.nome}
+                  </button>
+                ))}
           </div>
 
           <div className="field" style={{ textAlign: 'left' }}>
@@ -77,10 +88,11 @@ export default function LoginPage() {
               type="password"
               placeholder="••••••••"
               value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') entrar();
+              onChange={(event) => setSenha(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') void entrar();
               }}
+              disabled={enviando}
             />
           </div>
 
@@ -91,8 +103,10 @@ export default function LoginPage() {
             style={{ width: '100%', marginTop: 18, justifyContent: 'center' }}
             disabled={!perfilId || !senha || enviando}
             onClick={entrar}
+            aria-busy={enviando}
           >
-            <Lock size={16} /> {enviando ? 'Entrando…' : 'Entrar'}
+            {enviando ? <LoadingSpinner label="Entrando" /> : <Lock size={16} />}
+            {enviando ? 'Entrando…' : 'Entrar'}
           </button>
         </div>
       </div>
