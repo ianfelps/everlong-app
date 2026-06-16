@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Download, Pencil, Trash2, X } from 'lucide-react';
 import { ApiClientError, apiJson } from '@/lib/api';
 import { mesAno } from '@/lib/format';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -159,6 +159,14 @@ export function Lightbox({
               </>
             ) : (
               <>
+                <a
+                  className="btn btn-ghost btn-sm"
+                  href={`/api/fotos/${foto.id}/binario?download=1`}
+                  download
+                  aria-label="Baixar foto"
+                >
+                  <Download size={15} /> Baixar
+                </a>
                 <button className="btn btn-ghost btn-sm" onClick={() => setEditando(true)}>
                   <Pencil size={15} /> Editar legenda
                 </button>
