@@ -5,7 +5,7 @@ vi.mock('@/env', () => ({
   env: { TMDB_API_TOKEN: 'token-teste', TMDB_LANG: 'pt-BR' },
 }));
 
-import { buscarFilmes, detalharFilme } from './tmdb';
+import { buscarFilmes, detalharFilme, filmesPopulares } from './tmdb';
 
 const fetchMock = vi.fn();
 
@@ -59,6 +59,20 @@ describe('buscarFilmes', () => {
     );
     const [filme] = await buscarFilmes('x');
     expect(filme).toMatchObject({ posterPath: null, ano: null, sinopse: null });
+  });
+});
+
+describe('filmesPopulares', () => {
+  it('busca /movie/popular e normaliza', async () => {
+    fetchMock.mockResolvedValueOnce(
+      ok({ results: [{ id: 42, title: 'Pop', poster_path: '/p.jpg' }] }),
+    );
+    const filmes = await filmesPopulares();
+    expect(filmes).toEqual([
+      { tmdbId: 42, titulo: 'Pop', posterPath: '/p.jpg', ano: null, sinopse: null },
+    ]);
+    const url = fetchMock.mock.calls[0]![0] as URL;
+    expect(url.pathname).toContain('/movie/popular');
   });
 });
 

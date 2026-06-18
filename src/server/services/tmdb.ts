@@ -4,6 +4,8 @@ import { errors } from '@/server/lib/http';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
 const TIMEOUT_MS = 8000;
+// título e capa em inglês; sinopse no idioma do app (env.TMDB_LANG, pt-BR)
+const LANG_TITULO = 'en-US';
 
 export type FilmeTmdb = {
   tmdbId: number;
@@ -41,9 +43,10 @@ function normalizar(movie: TmdbMovie): FilmeTmdb {
 async function tmdbFetch<T>(
   path: string,
   params: Record<string, string | number> = {},
+  language: string = LANG_TITULO,
 ): Promise<T> {
   const url = new URL(`${BASE_URL}${path}`);
-  url.searchParams.set('language', env.TMDB_LANG);
+  url.searchParams.set('language', language);
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, String(value));
   }
@@ -80,7 +83,22 @@ export async function buscarFilmes(
   return data.results.map(normalizar);
 }
 
+export async function filmesPopulares(page = 1): Promise<FilmeTmdb[]> {
+  const data = await tmdbFetch<{ results: TmdbMovie[] }>('/movie/popular', {
+    page,
+  });
+  return data.results.map(normalizar);
+}
+
 export async function detalharFilme(tmdbId: number): Promise<FilmeTmdb> {
-  const data = await tmdbFetch<TmdbMovie>(`/movie/${tmdbId}`);
-  return normalizar(data);
+  // inglês p/ título+capa; pt-BR só p/ sinopse (segundo fetch tolerante a falha)
+  const [en, pt] = await Promise.all([
+    tmdbFetch<TmdbMovie>(`/movie/${tmdbId}`, {}, LANG_TITULO),
+    tmdbFetch<TmdbMovie>(`/movie/${tmdbId}`, {}, env.TMDB_LANG).catch(
+      () => null,
+    ),
+  ]);
+  const base = normalizar(en);
+  const sinopsePt = pt?.overview?.trim() || null;
+  return { ...base, sinopse: sinopsePt ?? base.sinopse };
 }

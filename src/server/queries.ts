@@ -11,6 +11,7 @@ import {
   eventos,
   filmeAvaliacoes,
   filmeFavoritos,
+  filmeWatchlist,
   filmes,
   perfis,
   recados,
@@ -100,6 +101,40 @@ export async function listarAssistidosJuntos() {
     .orderBy(sql`${assistidosJuntos.dataAssistido} desc nulls last`);
 }
 
+export async function listarCatalogoComResumo() {
+  const [filmesRows, avaliacoes, favoritos, assistidos, watchlist] =
+    await Promise.all([
+      db.select().from(filmes).orderBy(desc(filmes.createdAt)),
+      db.select().from(filmeAvaliacoes),
+      db.select().from(filmeFavoritos),
+      db.select().from(assistidosJuntos),
+      db.select().from(filmeWatchlist),
+    ]);
+
+  const avalPorFilme = new Map<string, typeof avaliacoes>();
+  for (const a of avaliacoes) {
+    const lista = avalPorFilme.get(a.filmeId) ?? [];
+    lista.push(a);
+    avalPorFilme.set(a.filmeId, lista);
+  }
+  const favPorFilme = new Map<string, typeof favoritos>();
+  for (const f of favoritos) {
+    const lista = favPorFilme.get(f.filmeId) ?? [];
+    lista.push(f);
+    favPorFilme.set(f.filmeId, lista);
+  }
+  const assistidoPorFilme = new Map(assistidos.map((a) => [a.filmeId, a]));
+  const naWatchlist = new Set(watchlist.map((w) => w.filmeId));
+
+  return filmesRows.map((filme) => ({
+    ...filme,
+    avaliacoes: avalPorFilme.get(filme.id) ?? [],
+    favoritos: favPorFilme.get(filme.id) ?? [],
+    assistidoJunto: assistidoPorFilme.get(filme.id) ?? null,
+    naWatchlist: naWatchlist.has(filme.id),
+  }));
+}
+
 export async function obterFilmeComAgregados(filmeId: string) {
   const [filme] = await db
     .select()
@@ -108,7 +143,7 @@ export async function obterFilmeComAgregados(filmeId: string) {
     .limit(1);
   if (!filme) return null;
 
-  const [avaliacoes, favoritos, [assistido]] = await Promise.all([
+  const [avaliacoes, favoritos, [assistido], [watch]] = await Promise.all([
     db
       .select()
       .from(filmeAvaliacoes)
@@ -123,6 +158,11 @@ export async function obterFilmeComAgregados(filmeId: string) {
       .from(assistidosJuntos)
       .where(eq(assistidosJuntos.filmeId, filmeId))
       .limit(1),
+    db
+      .select({ id: filmeWatchlist.id })
+      .from(filmeWatchlist)
+      .where(eq(filmeWatchlist.filmeId, filmeId))
+      .limit(1),
   ]);
 
   return {
@@ -130,5 +170,6 @@ export async function obterFilmeComAgregados(filmeId: string) {
     avaliacoes,
     favoritos,
     assistidoJunto: assistido ?? null,
+    naWatchlist: watch != null,
   };
 }

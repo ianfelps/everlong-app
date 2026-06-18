@@ -709,14 +709,29 @@ export const openapiSpec = {
     '/api/filmes/buscar': {
       get: {
         tags: ['filmes'],
-        summary: 'Busca filmes no TMDB (não grava)',
+        summary: 'Busca filmes no TMDB; sem q retorna populares (não grava)',
         security: [{ cookieAuth: [] }],
         parameters: [
-          { name: 'q', in: 'query', required: true, schema: { type: 'string' } },
+          { name: 'q', in: 'query', required: false, schema: { type: 'string' } },
           { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 500, default: 1 } },
         ],
         responses: {
           200: { description: 'Resultados TMDB', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/FilmeTmdb' } } } } },
+          502: { description: 'TMDB indisponível' },
+        },
+      },
+    },
+    '/api/filmes/tmdb/{tmdbId}': {
+      get: {
+        tags: ['filmes'],
+        summary: 'Detalhe de um filme do TMDB para pré-visualização (não grava)',
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: 'tmdbId', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        responses: {
+          200: { description: 'Detalhe TMDB', content: { 'application/json': { schema: { $ref: '#/components/schemas/FilmeTmdb' } } } },
+          404: { description: 'Filme não encontrado no TMDB' },
           502: { description: 'TMDB indisponível' },
         },
       },
@@ -792,6 +807,26 @@ export const openapiSpec = {
       delete: {
         tags: ['filmes'],
         summary: 'Desfavorita',
+        security: [{ cookieAuth: [] }],
+        responses: { 204: { $ref: '#/components/responses/NoContent' } },
+      },
+    },
+    '/api/filmes/{id}/watchlist': {
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+      ],
+      put: {
+        tags: ['filmes'],
+        summary: 'Adiciona filme à watchlist do casal (assistir depois)',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          200: { description: 'Na watchlist' },
+          404: { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      delete: {
+        tags: ['filmes'],
+        summary: 'Remove da watchlist',
         security: [{ cookieAuth: [] }],
         responses: { 204: { $ref: '#/components/responses/NoContent' } },
       },

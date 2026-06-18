@@ -5,6 +5,7 @@ import {
   assistidosJuntos,
   filmeAvaliacoes,
   filmeFavoritos,
+  filmeWatchlist,
   filmes,
 } from '@/server/db/schema';
 import { errors } from '@/server/lib/http';
@@ -142,6 +143,30 @@ export async function desmarcarAssistidoJunto(filmeId: string) {
   await db
     .delete(assistidosJuntos)
     .where(eq(assistidosJuntos.filmeId, filmeId));
+  return true;
+}
+
+export async function adicionarWatchlist(
+  filmeId: string,
+  adicionadoPor: string,
+) {
+  await garantirFilmeExiste(filmeId);
+  const [row] = await db
+    .insert(filmeWatchlist)
+    .values({ filmeId, adicionadoPor })
+    .onConflictDoNothing({ target: filmeWatchlist.filmeId })
+    .returning();
+  if (row) return row;
+  const [existente] = await db
+    .select()
+    .from(filmeWatchlist)
+    .where(eq(filmeWatchlist.filmeId, filmeId))
+    .limit(1);
+  return existente;
+}
+
+export async function removerWatchlist(filmeId: string) {
+  await db.delete(filmeWatchlist).where(eq(filmeWatchlist.filmeId, filmeId));
   return true;
 }
 

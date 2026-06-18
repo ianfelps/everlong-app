@@ -217,6 +217,24 @@ export const assistidosJuntos = pgTable(
   ],
 );
 
+export const filmeWatchlist = pgTable(
+  'filme_watchlist',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    filmeId: uuid('filme_id')
+      .notNull()
+      .unique()
+      .references(() => filmes.id, { onDelete: 'cascade' }),
+    adicionadoPor: uuid('adicionado_por').references(() => perfis.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index('idx_watchlist_created').on(sql`${t.createdAt} desc`)],
+);
+
 export type Perfil = typeof perfis.$inferSelect;
 export type NovoPerfil = typeof perfis.$inferInsert;
 export type Foto = typeof fotos.$inferSelect;
@@ -237,4 +255,6 @@ export type FilmeFavorito = typeof filmeFavoritos.$inferSelect;
 export type NovoFilmeFavorito = typeof filmeFavoritos.$inferInsert;
 export type AssistidoJunto = typeof assistidosJuntos.$inferSelect;
 export type NovoAssistidoJunto = typeof assistidosJuntos.$inferInsert;
+export type FilmeWatchlist = typeof filmeWatchlist.$inferSelect;
+export type NovoFilmeWatchlist = typeof filmeWatchlist.$inferInsert;
 export type ConfigCasal = typeof configCasal.$inferSelect;
