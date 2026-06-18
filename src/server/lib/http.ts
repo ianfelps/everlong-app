@@ -28,6 +28,8 @@ export const errors = {
     new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', msg),
   tooLarge: (msg = 'payload muito grande') =>
     new ApiError(413, 'PAYLOAD_TOO_LARGE', msg),
+  badGateway: (msg = 'serviço externo indisponível', details?: unknown) =>
+    new ApiError(502, 'BAD_GATEWAY', msg, details),
 };
 
 export function handle<T>(
