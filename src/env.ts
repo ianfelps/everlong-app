@@ -7,6 +7,8 @@ const schema = z.object({
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
   GOOGLE_OAUTH_REFRESH_TOKEN: z.string().optional(),
   GOOGLE_DRIVE_FOLDER_ID: z.string().min(1),
+  TMDB_API_TOKEN: z.string().min(1),
+  TMDB_LANG: z.string().default('pt-BR'),
   SESSION_SECRET: z.string().min(32),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });

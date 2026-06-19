@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Film,
   GitCommitVertical,
   Home,
   Images,
@@ -20,6 +21,7 @@ import { apiJson } from '@/lib/api';
 const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/home', label: 'Início', icon: Home },
   { href: '/album', label: 'Álbum', icon: Images },
+  { href: '/filmes', label: 'Filmes', icon: Film },
   { href: '/timeline', label: 'Linha do Tempo', icon: GitCommitVertical },
   { href: '/capsule', label: 'Cápsula', icon: Lock },
   { href: '/board', label: 'Recados', icon: MessageSquare },

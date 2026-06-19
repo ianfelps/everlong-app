@@ -6,8 +6,11 @@ import {
   boolean,
   timestamp,
   bigint,
+  integer,
+  smallint,
   index,
   check,
+  unique,
 } from 'drizzle-orm/pg-core';
 
 export const configCasal = pgTable(
@@ -133,6 +136,105 @@ export const recados = pgTable(
   (t) => [index('idx_recados_created').on(sql`${t.createdAt} desc`)],
 );
 
+export const filmes = pgTable(
+  'filmes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tmdbId: integer('tmdb_id').notNull().unique(),
+    titulo: text('titulo').notNull(),
+    posterPath: text('poster_path'),
+    ano: integer('ano'),
+    sinopse: text('sinopse'),
+    adicionadoPor: uuid('adicionado_por').references(() => perfis.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index('idx_filmes_created').on(sql`${t.createdAt} desc`)],
+);
+
+export const filmeAvaliacoes = pgTable(
+  'filme_avaliacoes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    filmeId: uuid('filme_id')
+      .notNull()
+      .references(() => filmes.id, { onDelete: 'cascade' }),
+    autorId: uuid('autor_id')
+      .notNull()
+      .references(() => perfis.id, { onDelete: 'cascade' }),
+    nota: smallint('nota').notNull(),
+    texto: text('texto'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    unique('uq_aval_filme_autor').on(t.filmeId, t.autorId),
+    check('chk_nota', sql`${t.nota} between 1 and 5`),
+  ],
+);
+
+export const filmeFavoritos = pgTable(
+  'filme_favoritos',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    filmeId: uuid('filme_id')
+      .notNull()
+      .references(() => filmes.id, { onDelete: 'cascade' }),
+    autorId: uuid('autor_id')
+      .notNull()
+      .references(() => perfis.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [unique('uq_fav_filme_autor').on(t.filmeId, t.autorId)],
+);
+
+export const assistidosJuntos = pgTable(
+  'assistidos_juntos',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    filmeId: uuid('filme_id')
+      .notNull()
+      .unique()
+      .references(() => filmes.id, { onDelete: 'cascade' }),
+    dataAssistido: timestamp('data_assistido', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('idx_assistidos_data').on(
+      sql`${t.dataAssistido} desc nulls last`,
+    ),
+  ],
+);
+
+export const filmeWatchlist = pgTable(
+  'filme_watchlist',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    filmeId: uuid('filme_id')
+      .notNull()
+      .unique()
+      .references(() => filmes.id, { onDelete: 'cascade' }),
+    adicionadoPor: uuid('adicionado_por').references(() => perfis.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index('idx_watchlist_created').on(sql`${t.createdAt} desc`)],
+);
+
 export type Perfil = typeof perfis.$inferSelect;
 export type NovoPerfil = typeof perfis.$inferInsert;
 export type Foto = typeof fotos.$inferSelect;
@@ -145,4 +247,14 @@ export type CapsulaFoto = typeof capsulaFotos.$inferSelect;
 export type NovaCapsulaFoto = typeof capsulaFotos.$inferInsert;
 export type Recado = typeof recados.$inferSelect;
 export type NovoRecado = typeof recados.$inferInsert;
+export type Filme = typeof filmes.$inferSelect;
+export type NovoFilme = typeof filmes.$inferInsert;
+export type FilmeAvaliacao = typeof filmeAvaliacoes.$inferSelect;
+export type NovaFilmeAvaliacao = typeof filmeAvaliacoes.$inferInsert;
+export type FilmeFavorito = typeof filmeFavoritos.$inferSelect;
+export type NovoFilmeFavorito = typeof filmeFavoritos.$inferInsert;
+export type AssistidoJunto = typeof assistidosJuntos.$inferSelect;
+export type NovoAssistidoJunto = typeof assistidosJuntos.$inferInsert;
+export type FilmeWatchlist = typeof filmeWatchlist.$inferSelect;
+export type NovoFilmeWatchlist = typeof filmeWatchlist.$inferInsert;
 export type ConfigCasal = typeof configCasal.$inferSelect;

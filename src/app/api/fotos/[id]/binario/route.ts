@@ -8,14 +8,22 @@ import { streamFoto } from '@/server/services/drive';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
+function extensaoPorMime(mimeType: string): string {
+  if (mimeType === 'image/png') return 'png';
+  if (mimeType === 'image/webp') return 'webp';
+  if (mimeType === 'image/heic') return 'heic';
+  return 'jpg';
+}
+
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   return handle(async () => {
     await requireSession();
     const { id } = await params;
     const foto = await obterFoto(id);
+    const download = new URL(req.url).searchParams.get('download') === '1';
     if (!foto) throw errors.notFound('foto não encontrada');
 
     const driveRes = await streamFoto(foto.driveFileId);
@@ -23,13 +31,19 @@ export async function GET(
 
     // Converte stream Node em ReadableStream Web p/ Response do Next
     const webStream = Readable.toWeb(nodeStream) as ReadableStream;
+    const headers: Record<string, string> = {
+      'content-type': foto.mimeType,
+      'cache-control': 'private, max-age=3600, immutable',
+    };
+
+    if (download) {
+      const filename = `everlong-foto-${foto.id}.${extensaoPorMime(foto.mimeType)}`;
+      headers['content-disposition'] = `attachment; filename="${filename}"`;
+    }
 
     return new Response(webStream, {
       status: 200,
-      headers: {
-        'content-type': foto.mimeType,
-        'cache-control': 'private, max-age=3600, immutable',
-      },
+      headers,
     });
   });
 }

@@ -20,6 +20,8 @@ export const openapiSpec = {
     { name: 'eventos' },
     { name: 'capsulas' },
     { name: 'recados' },
+    { name: 'filmes' },
+    { name: 'assistidos' },
   ],
   components: {
     securitySchemes: {
@@ -136,6 +138,88 @@ export const openapiSpec = {
           total_dias: { type: 'integer' },
           total_segundos: { type: 'integer' },
         },
+      },
+      Filme: {
+        type: 'object',
+        required: ['id', 'tmdbId', 'titulo', 'createdAt'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          tmdbId: { type: 'integer' },
+          titulo: { type: 'string' },
+          posterPath: { type: 'string', nullable: true },
+          ano: { type: 'integer', nullable: true },
+          sinopse: { type: 'string', nullable: true },
+          adicionadoPor: { type: 'string', format: 'uuid', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      FilmeTmdb: {
+        type: 'object',
+        required: ['tmdbId', 'titulo'],
+        properties: {
+          tmdbId: { type: 'integer' },
+          titulo: { type: 'string' },
+          posterPath: { type: 'string', nullable: true },
+          ano: { type: 'integer', nullable: true },
+          sinopse: { type: 'string', nullable: true },
+        },
+      },
+      Avaliacao: {
+        type: 'object',
+        required: ['id', 'filmeId', 'autorId', 'nota', 'createdAt'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          filmeId: { type: 'string', format: 'uuid' },
+          autorId: { type: 'string', format: 'uuid' },
+          nota: { type: 'integer', minimum: 1, maximum: 5 },
+          texto: { type: 'string', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Favorito: {
+        type: 'object',
+        required: ['id', 'filmeId', 'autorId', 'createdAt'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          filmeId: { type: 'string', format: 'uuid' },
+          autorId: { type: 'string', format: 'uuid' },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      AssistidoJunto: {
+        type: 'object',
+        required: ['id', 'filmeId', 'createdAt'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          filmeId: { type: 'string', format: 'uuid' },
+          dataAssistido: { type: 'string', format: 'date-time', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      FilmeAgregado: {
+        allOf: [
+          { $ref: '#/components/schemas/Filme' },
+          {
+            type: 'object',
+            properties: {
+              avaliacoes: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/Avaliacao' },
+              },
+              favoritos: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/Favorito' },
+              },
+              assistidoJunto: {
+                oneOf: [
+                  { $ref: '#/components/schemas/AssistidoJunto' },
+                  { type: 'null' },
+                ],
+              },
+            },
+          },
+        ],
       },
       Health: {
         type: 'object',
@@ -589,6 +673,207 @@ export const openapiSpec = {
         tags: ['recados'],
         security: [{ cookieAuth: [] }],
         responses: { 204: { $ref: '#/components/responses/NoContent' }, 404: { $ref: '#/components/responses/NotFound' } },
+      },
+    },
+    '/api/filmes': {
+      get: {
+        tags: ['filmes'],
+        summary: 'Catálogo de filmes do casal',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          200: { description: 'Lista', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Filme' } } } } },
+        },
+      },
+      post: {
+        tags: ['filmes'],
+        summary: 'Adiciona filme ao catálogo via TMDB (idempotente)',
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['tmdb_id'],
+                properties: { tmdb_id: { type: 'integer' } },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Adicionado (ou já existente)', content: { 'application/json': { schema: { $ref: '#/components/schemas/Filme' } } } },
+          502: { description: 'TMDB indisponível' },
+        },
+      },
+    },
+    '/api/filmes/buscar': {
+      get: {
+        tags: ['filmes'],
+        summary: 'Busca filmes no TMDB; sem q retorna populares (não grava)',
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: 'q', in: 'query', required: false, schema: { type: 'string' } },
+          { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 500, default: 1 } },
+        ],
+        responses: {
+          200: { description: 'Resultados TMDB', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/FilmeTmdb' } } } } },
+          502: { description: 'TMDB indisponível' },
+        },
+      },
+    },
+    '/api/filmes/tmdb/{tmdbId}': {
+      get: {
+        tags: ['filmes'],
+        summary: 'Detalhe de um filme do TMDB para pré-visualização (não grava)',
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: 'tmdbId', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        responses: {
+          200: { description: 'Detalhe TMDB', content: { 'application/json': { schema: { $ref: '#/components/schemas/FilmeTmdb' } } } },
+          404: { description: 'Filme não encontrado no TMDB' },
+          502: { description: 'TMDB indisponível' },
+        },
+      },
+    },
+    '/api/filmes/{id}': {
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+      ],
+      get: {
+        tags: ['filmes'],
+        summary: 'Filme com avaliações, favoritos e flag de assistido',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          200: { description: 'Agregado', content: { 'application/json': { schema: { $ref: '#/components/schemas/FilmeAgregado' } } } },
+          404: { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      delete: {
+        tags: ['filmes'],
+        summary: 'Remove filme do catálogo (cascade)',
+        security: [{ cookieAuth: [] }],
+        responses: { 204: { $ref: '#/components/responses/NoContent' }, 404: { $ref: '#/components/responses/NotFound' } },
+      },
+    },
+    '/api/filmes/{id}/avaliacoes': {
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+      ],
+      put: {
+        tags: ['filmes'],
+        summary: 'Cria/atualiza avaliação do perfil corrente',
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['nota'],
+                properties: {
+                  nota: { type: 'integer', minimum: 1, maximum: 5 },
+                  texto: { type: 'string', nullable: true },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Salva', content: { 'application/json': { schema: { $ref: '#/components/schemas/Avaliacao' } } } },
+          404: { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      delete: {
+        tags: ['filmes'],
+        summary: 'Remove a avaliação do perfil corrente',
+        security: [{ cookieAuth: [] }],
+        responses: { 204: { $ref: '#/components/responses/NoContent' }, 404: { $ref: '#/components/responses/NotFound' } },
+      },
+    },
+    '/api/filmes/{id}/favorito': {
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+      ],
+      put: {
+        tags: ['filmes'],
+        summary: 'Marca filme como favorito do perfil corrente',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          200: { description: 'Favoritado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Favorito' } } } },
+          404: { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      delete: {
+        tags: ['filmes'],
+        summary: 'Desfavorita',
+        security: [{ cookieAuth: [] }],
+        responses: { 204: { $ref: '#/components/responses/NoContent' } },
+      },
+    },
+    '/api/filmes/{id}/watchlist': {
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+      ],
+      put: {
+        tags: ['filmes'],
+        summary: 'Adiciona filme à watchlist do casal (assistir depois)',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          200: { description: 'Na watchlist' },
+          404: { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      delete: {
+        tags: ['filmes'],
+        summary: 'Remove da watchlist',
+        security: [{ cookieAuth: [] }],
+        responses: { 204: { $ref: '#/components/responses/NoContent' } },
+      },
+    },
+    '/api/assistidos-juntos': {
+      get: {
+        tags: ['assistidos'],
+        summary: 'Lista de filmes assistidos juntos (cronológica)',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          200: { description: 'Lista', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/AssistidoJunto' } } } } },
+        },
+      },
+      post: {
+        tags: ['assistidos'],
+        summary: 'Marca filme como assistido junto (idempotente)',
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['filme_id'],
+                properties: {
+                  filme_id: { type: 'string', format: 'uuid' },
+                  data_assistido: { type: 'string', format: 'date-time', nullable: true },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Marcado', content: { 'application/json': { schema: { $ref: '#/components/schemas/AssistidoJunto' } } } },
+          404: { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/api/assistidos-juntos/{filmeId}': {
+      delete: {
+        tags: ['assistidos'],
+        summary: 'Desmarca assistido junto',
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: 'filmeId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { 204: { $ref: '#/components/responses/NoContent' } },
       },
     },
   },
