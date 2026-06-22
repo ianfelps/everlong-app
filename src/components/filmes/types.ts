@@ -34,6 +34,11 @@ export type ResultadoTmdb = {
   posterPath: string | null;
   ano: number | null;
   sinopse: string | null;
+  generos?: string[];
+  duracaoMin?: number | null;
+  diretor?: string | null;
+  elenco?: string[];
+  produtoras?: string[];
 };
 
 export type Aba = 'catalogo' | 'favoritos' | 'watchlist' | 'assistidos';

@@ -114,7 +114,7 @@ export function FilmesView({
       <div className="page-head">
         <h1 className="page-title">Filmes</h1>
         <p className="page-sub">
-          O cinema de vocês: avaliações, favoritos e as sessões a dois.
+          O nosso cinema: avaliações, favoritos e as sessões de nós dois.
         </p>
       </div>
 

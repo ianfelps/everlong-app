@@ -13,6 +13,11 @@ export type FilmeTmdb = {
   posterPath: string | null;
   ano: number | null;
   sinopse: string | null;
+  generos?: string[];
+  duracaoMin?: number | null;
+  diretor?: string | null;
+  elenco?: string[];
+  produtoras?: string[];
 };
 
 type TmdbMovie = {
@@ -22,6 +27,13 @@ type TmdbMovie = {
   poster_path?: string | null;
   release_date?: string | null;
   overview?: string | null;
+  runtime?: number | null;
+  genres?: { id: number; name: string }[];
+  production_companies?: { id: number; name: string }[];
+  credits?: {
+    cast?: { name: string; order: number }[];
+    crew?: { name: string; job: string }[];
+  };
 };
 
 function anoDeReleaseDate(date?: string | null): number | null {
@@ -91,14 +103,38 @@ export async function filmesPopulares(page = 1): Promise<FilmeTmdb[]> {
 }
 
 export async function detalharFilme(tmdbId: number): Promise<FilmeTmdb> {
-  // inglês p/ título+capa; pt-BR só p/ sinopse (segundo fetch tolerante a falha)
+  // inglês p/ título+capa; pt-BR p/ sinopse+gêneros (segundo fetch tolerante a falha)
+  const params = { append_to_response: 'credits' };
   const [en, pt] = await Promise.all([
-    tmdbFetch<TmdbMovie>(`/movie/${tmdbId}`, {}, LANG_TITULO),
-    tmdbFetch<TmdbMovie>(`/movie/${tmdbId}`, {}, env.TMDB_LANG).catch(
+    tmdbFetch<TmdbMovie>(`/movie/${tmdbId}`, params, LANG_TITULO),
+    tmdbFetch<TmdbMovie>(`/movie/${tmdbId}`, params, env.TMDB_LANG).catch(
       () => null,
     ),
   ]);
   const base = normalizar(en);
+  const fonte = pt ?? en;
   const sinopsePt = pt?.overview?.trim() || null;
-  return { ...base, sinopse: sinopsePt ?? base.sinopse };
+  const credits = fonte.credits ?? en.credits;
+
+  const diretor =
+    credits?.crew?.find((c) => c.job === 'Director')?.name ?? null;
+  const elenco = (credits?.cast ?? [])
+    .slice()
+    .sort((a, b) => a.order - b.order)
+    .slice(0, 5)
+    .map((c) => c.name);
+  const generos = (fonte.genres ?? en.genres ?? []).map((g) => g.name);
+  const produtoras = (en.production_companies ?? [])
+    .slice(0, 3)
+    .map((p) => p.name);
+
+  return {
+    ...base,
+    sinopse: sinopsePt ?? base.sinopse,
+    generos,
+    duracaoMin: en.runtime ?? null,
+    diretor,
+    elenco,
+    produtoras,
+  };
 }

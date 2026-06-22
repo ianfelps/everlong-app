@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { Upload, X, Check } from 'lucide-react';
 import { apiForm, ApiClientError } from '@/lib/api';
+import { inputParaIso } from '@/lib/format';
 import { ModalPortal } from '@/components/ui/ModalPortal';
 
 export function UploadModal({
@@ -36,10 +37,8 @@ export function UploadModal({
       const form = new FormData();
       form.set('arquivo', file);
       if (legenda.trim()) form.set('legenda', legenda.trim());
-      if (data.trim()) {
-        const dt = new Date(data);
-        if (!Number.isNaN(dt.getTime())) form.set('tirada_em', dt.toISOString());
-      }
+      const iso = inputParaIso(data);
+      if (iso) form.set('tirada_em', iso);
       await apiForm('/api/fotos', form);
       onUploaded();
       onClose();
