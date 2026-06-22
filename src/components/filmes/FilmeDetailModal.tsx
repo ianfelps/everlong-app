@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { X, Heart, Users, Trash2, Bookmark } from 'lucide-react';
-import { apiJson, ApiClientError } from '@/lib/api';
+import { useEffect, useState } from 'react';
+import { X, Heart, Users, Trash2, Bookmark, Pencil } from 'lucide-react';
+import { apiGet, apiJson, ApiClientError } from '@/lib/api';
 import { ModalPortal } from '@/components/ui/ModalPortal';
 import { ProgressiveImage } from '@/components/ui/ProgressiveImage';
 import { StarRating } from '@/components/ui/StarRating';
 import { renderInlineMarkdown } from '@/lib/inline-markdown';
 import { dataExtenso } from '@/lib/format';
 import { posterUrl } from '@/lib/filmes';
-import type { FilmeResumo } from './types';
+import type { FilmeResumo, ResultadoTmdb } from './types';
 
 export function FilmeDetailModal({
   filme,
@@ -32,21 +32,40 @@ export function FilmeDetailModal({
   const dataIso = filme.assistidoJunto?.dataAssistido;
   const [nota, setNota] = useState(minhaAval?.nota ?? 0);
   const [texto, setTexto] = useState(minhaAval?.texto ?? '');
+  const [editando, setEditando] = useState(false);
   const [quando, setQuando] = useState(dataIso ? dataIso.slice(0, 10) : '');
   const [marcando, setMarcando] = useState(false);
   const [busy, setBusy] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [detalhe, setDetalhe] = useState<ResultadoTmdb | null>(null);
 
   const poster = posterUrl(filme.posterPath, 'w342');
 
-  async function acao(fn: () => Promise<unknown>, fechar = false) {
+  // infos extras (elenco, direção, gêneros…) ao vivo do TMDB; best-effort
+  useEffect(() => {
+    let vivo = true;
+    apiGet<ResultadoTmdb>(`/api/filmes/tmdb/${filme.tmdbId}`)
+      .then((d) => {
+        if (vivo) setDetalhe(d);
+      })
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, [filme.tmdbId]);
+
+  async function acao(
+    fn: () => Promise<unknown>,
+    opts: { fechar?: boolean; onSuccess?: () => void } = {},
+  ) {
     if (busy) return;
     setBusy(true);
     setErro(null);
     try {
       await fn();
       onChanged();
-      if (fechar) onClose();
+      opts.onSuccess?.();
+      if (opts.fechar) onClose();
     } catch (e) {
       setErro(e instanceof ApiClientError ? e.message : 'falha na operação');
     } finally {
@@ -59,11 +78,13 @@ export function FilmeDetailModal({
       setErro('dê ao menos 1 estrela');
       return;
     }
-    acao(() =>
-      apiJson(`/api/filmes/${filme.id}/avaliacoes`, 'PUT', {
-        nota,
-        texto: texto.trim() || null,
-      }),
+    acao(
+      () =>
+        apiJson(`/api/filmes/${filme.id}/avaliacoes`, 'PUT', {
+          nota,
+          texto: texto.trim() || null,
+        }),
+      { onSuccess: () => setEditando(false) },
     );
   }
 
@@ -72,7 +93,15 @@ export function FilmeDetailModal({
       await apiJson(`/api/filmes/${filme.id}/avaliacoes`, 'DELETE');
       setNota(0);
       setTexto('');
+      setEditando(false);
     });
+  }
+
+  function cancelarEdicao() {
+    setNota(minhaAval?.nota ?? 0);
+    setTexto(minhaAval?.texto ?? '');
+    setErro(null);
+    setEditando(false);
   }
 
   function toggleFavorito() {
@@ -123,7 +152,7 @@ export function FilmeDetailModal({
 
   function excluirFilme() {
     if (!confirm('Remover este filme do catálogo? Avaliações serão apagadas.')) return;
-    acao(() => apiJson(`/api/filmes/${filme.id}`, 'DELETE'), true);
+    acao(() => apiJson(`/api/filmes/${filme.id}`, 'DELETE'), { fechar: true });
   }
 
   const parceiros = Object.entries(perfis).filter(([id]) => id !== meuId);
@@ -162,6 +191,45 @@ export function FilmeDetailModal({
               ) : (
                 <p className="filme-sinopse filme-sem-nota">Sem sinopse.</p>
               )}
+
+              {detalhe && (
+                <div className="filme-info-extra">
+                  {(detalhe.generos?.length || detalhe.duracaoMin) && (
+                    <div className="filme-chips">
+                      {detalhe.generos?.map((g) => (
+                        <span className="filme-chip" key={g}>
+                          {g}
+                        </span>
+                      ))}
+                      {detalhe.duracaoMin ? (
+                        <span className="filme-chip filme-chip-dur">
+                          {Math.floor(detalhe.duracaoMin / 60)}h{' '}
+                          {String(detalhe.duracaoMin % 60).padStart(2, '0')}min
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+                  {detalhe.diretor && (
+                    <p className="filme-info-linha">
+                      <span className="filme-info-label">Direção</span>
+                      {detalhe.diretor}
+                    </p>
+                  )}
+                  {detalhe.elenco && detalhe.elenco.length > 0 && (
+                    <p className="filme-info-linha">
+                      <span className="filme-info-label">Elenco</span>
+                      {detalhe.elenco.join(', ')}
+                    </p>
+                  )}
+                  {detalhe.produtoras && detalhe.produtoras.length > 0 && (
+                    <p className="filme-info-linha">
+                      <span className="filme-info-label">Produtora</span>
+                      {detalhe.produtoras.join(', ')}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="filme-acoes">
                 <button
                   type="button"
@@ -242,39 +310,76 @@ export function FilmeDetailModal({
 
           <h4 className="filme-sec-titulo">Avaliações</h4>
           <div className="filme-avals">
-            {/* minha avaliação — editável */}
+            {/* minha avaliação */}
             <div className="filme-aval filme-aval-eu">
               <div className="filme-aval-head">
                 <span className="filme-aval-nome">Você</span>
-                <StarRating value={nota} onChange={setNota} size={22} />
-              </div>
-              <textarea
-                className="filme-editor-texto"
-                rows={3}
-                placeholder="O que achou? (aceita *itálico* e **negrito**)"
-                value={texto}
-                onChange={(e) => setTexto(e.target.value)}
-              />
-              <div className="filme-editor-acoes">
-                {minhaAval && (
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-ghost"
-                    onClick={removerAvaliacao}
-                    disabled={busy}
-                  >
-                    Remover
-                  </button>
+                {editando ? (
+                  <StarRating value={nota} onChange={setNota} size={22} />
+                ) : minhaAval ? (
+                  <StarRating value={minhaAval.nota} size={20} />
+                ) : (
+                  <span className="filme-sem-nota">ainda não avaliou</span>
                 )}
-                <button
-                  type="button"
-                  className="btn btn-sm btn-primary"
-                  onClick={salvarAvaliacao}
-                  disabled={busy}
-                >
-                  {minhaAval ? 'Atualizar' : 'Salvar'}
-                </button>
               </div>
+
+              {editando ? (
+                <>
+                  <textarea
+                    className="filme-editor-texto"
+                    rows={3}
+                    placeholder="O que achou? (aceita *itálico* e **negrito**)"
+                    value={texto}
+                    onChange={(e) => setTexto(e.target.value)}
+                  />
+                  <div className="filme-editor-acoes">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost"
+                      onClick={cancelarEdicao}
+                      disabled={busy}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      onClick={salvarAvaliacao}
+                      disabled={busy}
+                    >
+                      {minhaAval ? 'Atualizar' : 'Salvar'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {minhaAval?.texto && (
+                    <p className="filme-aval-texto">
+                      {renderInlineMarkdown(minhaAval.texto, 'aval-eu')}
+                    </p>
+                  )}
+                  <div className="filme-editor-acoes">
+                    {minhaAval && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-ghost"
+                        onClick={removerAvaliacao}
+                        disabled={busy}
+                      >
+                        Remover
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      onClick={() => setEditando(true)}
+                      disabled={busy}
+                    >
+                      <Pencil size={14} /> {minhaAval ? 'Editar' : 'Avaliar'}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* avaliação do parceiro — somente leitura */}

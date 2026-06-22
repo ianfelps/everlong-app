@@ -967,6 +967,9 @@
     overflow-y: auto;
     overscroll-behavior: contain;
   }
+  .modal-veil-top {
+    z-index: 100;
+  }
   .modal {
     width: min(540px, 100%);
     max-height: calc(100dvh - 48px);
@@ -1855,6 +1858,30 @@
     min-height: 200px;
     width: 100%;
   }
+  .lb-photo-frame {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    line-height: 0;
+  }
+  .lb-photo-frame .lightbox-photo {
+    display: inline-block;
+    max-width: 90vw;
+    max-height: 74vh;
+  }
+  .lb-photo-frame .lightbox-photo img {
+    max-height: 74vh;
+  }
+  .lb-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 3;
+    color: #fff;
+    background: rgba(6, 18, 26, 0.55);
+    border-radius: 999px;
+    backdrop-filter: blur(4px);
+  }
   .lightbox-photo {
     display: inline-block;
     min-width: min(320px, 82vw);
@@ -2365,6 +2392,60 @@
     color: var(--ink-faint);
     margin: 10px 0 0;
   }
+  .filme-info-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+    animation: filmeInfoIn 0.4s ease both;
+  }
+  .filme-chip {
+    animation: filmeInfoIn 0.4s ease both;
+  }
+  .filme-chip:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+  .filme-chip:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  .filme-chip:nth-child(4) {
+    animation-delay: 0.15s;
+  }
+  .filme-chip:nth-child(n + 5) {
+    animation-delay: 0.2s;
+  }
+  .filme-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+  .filme-chip {
+    font-size: 11px;
+    color: var(--ink-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--surface-hi);
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+  .filme-chip-dur {
+    color: var(--ink-faint);
+  }
+  .filme-info-linha {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-dim);
+    line-height: 1.45;
+  }
+  .filme-info-label {
+    display: inline-block;
+    min-width: 64px;
+    margin-right: 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+  }
   .filme-quando {
     margin-top: 14px;
   }
@@ -2480,6 +2561,16 @@
   from {
     opacity: 0;
     transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes filmeInfoIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;

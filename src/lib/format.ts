@@ -2,6 +2,34 @@ const MS_DIA = 86_400_000;
 const MS_HORA = 3_600_000;
 const MS_MINUTO = 60_000;
 
+/**
+ * Converte um valor de data para o formato 'YYYY-MM-DD' usado por <input type="date">,
+ * respeitando o fuso local (evita deslocar o dia por causa de UTC).
+ */
+export function dataParaInput(date: Date | string | null | undefined): string {
+  if (!date) return '';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return '';
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
+/**
+ * Converte um 'YYYY-MM-DD' vindo de <input type="date"> para ISO, fixando o meio-dia
+ * local. Isso garante que o dia escolhido não mude ao serializar para UTC.
+ */
+export function inputParaIso(value: string): string | null {
+  const v = value.trim();
+  if (!v) return null;
+  const [ano, mes, dia] = v.split('-').map(Number);
+  if (!ano || !mes || !dia) return null;
+  const d = new Date(ano, mes - 1, dia, 12, 0, 0, 0);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+
 export function mesAno(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   return d
