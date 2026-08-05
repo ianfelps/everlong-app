@@ -20,6 +20,10 @@ import { dataExtenso, tempoAte, tempoRelativo } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
+function itemResumo(total: number, singular: string, plural: string) {
+  return `${total.toLocaleString('pt-BR')} ${total === 1 ? singular : plural}`;
+}
+
 export default async function DashboardPage() {
   const [
     cron,
@@ -80,6 +84,14 @@ export default async function DashboardPage() {
               dias desde que a gente começou a contar junto.
             </span>
           </div>
+          <p className="timer-summary">
+            Desde então, já guardamos{' '}
+            <b>{itemResumo(cron.total_fotos, 'foto', 'fotos')}</b>, marcamos{' '}
+            <b>{itemResumo(cron.total_eventos, 'momento', 'momentos')}</b>, abrimos{' '}
+            <b>{itemResumo(cron.total_capsulas_abertas, 'cápsula', 'cápsulas')}</b>, vimos{' '}
+            <b>{itemResumo(cron.total_filmes_assistidos, 'filme', 'filmes')} juntos</b> e trocamos{' '}
+            <b>{itemResumo(cron.total_recados, 'recado', 'recados')}</b>.
+          </p>
         </div>
       </section>
 

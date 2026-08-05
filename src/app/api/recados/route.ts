@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/server/db';
 import { recados } from '@/server/db/schema';
-import { handle } from '@/server/lib/http';
+import { errors, handle } from '@/server/lib/http';
+import {
+  listarArquivoRecados,
+  listarRecadosDoMural,
+} from '@/server/queries';
 import { requireSession } from '@/server/lib/session';
-import { listarRecados } from '@/server/queries';
 
 export const runtime = 'nodejs';
 
@@ -14,15 +17,45 @@ const createSchema = z.object({
 });
 
 const querySchema = z.object({
-  order: z.enum(['asc', 'desc']).default('desc'),
+  scope: z.enum(['current', 'archive']).default('current'),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  cursor: z.string().optional(),
 });
+
+function decodeCursor(raw: string): { createdAt: Date; id: string } {
+  try {
+    const json = Buffer.from(raw, 'base64url').toString('utf8');
+    const parsed = JSON.parse(json) as { c: string; i: string };
+    const createdAt = new Date(parsed.c);
+    if (Number.isNaN(createdAt.getTime()) || !parsed.i) throw new Error();
+    return { createdAt, id: parsed.i };
+  } catch {
+    throw errors.badRequest('cursor inválido');
+  }
+}
+
+function encodeCursor(cursor: { createdAt: Date; id: string }): string {
+  return Buffer.from(
+    JSON.stringify({ c: cursor.createdAt.toISOString(), i: cursor.id }),
+  ).toString('base64url');
+}
 
 export async function GET(req: NextRequest) {
   return handle(async () => {
-    await requireSession();
+    const session = await requireSession();
     const url = new URL(req.url);
     const q = querySchema.parse(Object.fromEntries(url.searchParams));
-    return listarRecados(q.order);
+    if (q.scope === 'archive') {
+      const { items, nextCursor } = await listarArquivoRecados(session.perfilId, {
+        limit: q.limit,
+        cursor: q.cursor ? decodeCursor(q.cursor) : undefined,
+      });
+      return {
+        items,
+        next_cursor: nextCursor ? encodeCursor(nextCursor) : null,
+      };
+    }
+    return listarRecadosDoMural(session.perfilId);
   });
 }
 
@@ -38,6 +71,9 @@ export async function POST(req: NextRequest) {
         cor: body.cor ?? 'amarelo',
       })
       .returning();
-    return NextResponse.json(row, { status: 201 });
+    return NextResponse.json(
+      { ...row, curtidas: 0, curtidoPorMim: false },
+      { status: 201 },
+    );
   });
 }

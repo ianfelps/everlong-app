@@ -1,12 +1,29 @@
 import 'server-only';
-import { asc, desc, eq, gte, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  ne,
+  or,
+  sql,
+} from 'drizzle-orm';
 import {
   inicioJanelaRecados,
+  RECADO_FIXADO_LIMITE,
   RECADO_LIMITE,
+  RECADO_RECENTE_LIMITE,
 } from '@/lib/recados';
 import { db } from '@/server/db';
 import {
   assistidosJuntos,
+  capsulas,
   configCasal,
   eventos,
   filmeAvaliacoes,
@@ -14,8 +31,17 @@ import {
   filmeWatchlist,
   filmes,
   perfis,
+  recadoCurtidas,
   recados,
 } from '@/server/db/schema';
+import { errors } from '@/server/lib/http';
+
+export type RecadoComEstado = typeof recados.$inferSelect & {
+  curtidas: number;
+  curtidoPorMim: boolean;
+};
+
+type CursorRecado = { createdAt: Date; id: string };
 
 export async function mapaPerfis(): Promise<Map<string, string>> {
   const rows = await db
@@ -60,6 +86,162 @@ export async function listarRecados(
     .limit(RECADO_LIMITE);
 
   return ordem === 'asc' ? rows.reverse() : rows;
+}
+
+async function adicionarEstadoRecados(
+  rows: (typeof recados.$inferSelect)[],
+  perfilId: string,
+): Promise<RecadoComEstado[]> {
+  if (rows.length === 0) return [];
+
+  const ids = rows.map((row) => row.id);
+  const curtidas = await db
+    .select({ recadoId: recadoCurtidas.recadoId, autorId: recadoCurtidas.autorId })
+    .from(recadoCurtidas)
+    .where(inArray(recadoCurtidas.recadoId, ids));
+
+  const curtidasPorRecado = new Map<string, number>();
+  const curtidasProprias = new Set<string>();
+  for (const curtida of curtidas) {
+    curtidasPorRecado.set(
+      curtida.recadoId,
+      (curtidasPorRecado.get(curtida.recadoId) ?? 0) + 1,
+    );
+    if (curtida.autorId === perfilId) curtidasProprias.add(curtida.recadoId);
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    curtidas: curtidasPorRecado.get(row.id) ?? 0,
+    curtidoPorMim: curtidasProprias.has(row.id),
+  }));
+}
+
+export async function obterRecadoComEstado(id: string, perfilId: string) {
+  const [row] = await db.select().from(recados).where(eq(recados.id, id)).limit(1);
+  if (!row) throw errors.notFound('recado não encontrado');
+  const [recado] = await adicionarEstadoRecados([row], perfilId);
+  return recado!;
+}
+
+export async function listarRecadosDoMural(perfilId: string, agora = new Date()) {
+  const inicio = inicioJanelaRecados(agora);
+  const [fixados, recentes] = await Promise.all([
+    db
+      .select()
+      .from(recados)
+      .where(isNotNull(recados.fixadoEm))
+      .orderBy(desc(recados.fixadoEm), desc(recados.id))
+      .limit(RECADO_FIXADO_LIMITE),
+    db
+      .select()
+      .from(recados)
+      .where(and(gte(recados.createdAt, inicio), isNull(recados.fixadoEm)))
+      .orderBy(desc(recados.createdAt), desc(recados.id))
+      .limit(RECADO_RECENTE_LIMITE),
+  ]);
+
+  return adicionarEstadoRecados([...fixados, ...recentes], perfilId);
+}
+
+export async function listarArquivoRecados(
+  perfilId: string,
+  input: { limit: number; cursor?: CursorRecado },
+  agora = new Date(),
+) {
+  const condicoes = [
+    lt(recados.createdAt, inicioJanelaRecados(agora)),
+    isNull(recados.fixadoEm),
+  ];
+  if (input.cursor) {
+    condicoes.push(
+      or(
+        lt(recados.createdAt, input.cursor.createdAt),
+        and(
+          eq(recados.createdAt, input.cursor.createdAt),
+          lt(recados.id, input.cursor.id),
+        ),
+      )!,
+    );
+  }
+
+  const rows = await db
+    .select()
+    .from(recados)
+    .where(and(...condicoes))
+    .orderBy(desc(recados.createdAt), desc(recados.id))
+    .limit(input.limit + 1);
+  const items = rows.slice(0, input.limit);
+  const last = items[items.length - 1];
+
+  return {
+    items: await adicionarEstadoRecados(items, perfilId),
+    nextCursor:
+      rows.length > input.limit && last
+        ? { createdAt: last.createdAt, id: last.id }
+        : null,
+  };
+}
+
+export async function definirRecadoFixado(id: string, fixado: boolean) {
+  const [existente] = await db
+    .select({ fixadoEm: recados.fixadoEm })
+    .from(recados)
+    .where(eq(recados.id, id))
+    .limit(1);
+  if (!existente) throw errors.notFound('recado não encontrado');
+
+  if (fixado && !existente.fixadoEm) {
+    const [resultado] = await db
+      .select({ total: count() })
+      .from(recados)
+      .where(isNotNull(recados.fixadoEm));
+    if (Number(resultado?.total ?? 0) >= RECADO_FIXADO_LIMITE) {
+      throw errors.conflict('limite de quatro recados fixados atingido');
+    }
+  }
+
+  const [row] = await db
+    .update(recados)
+    .set({ fixadoEm: fixado ? new Date() : null })
+    .where(eq(recados.id, id))
+    .returning();
+  if (!row) throw errors.notFound('recado não encontrado');
+  return row;
+}
+
+export async function curtirRecado(id: string, autorId: string) {
+  await obterRecadoComEstado(id, autorId);
+  const [row] = await db
+    .insert(recadoCurtidas)
+    .values({ recadoId: id, autorId })
+    .onConflictDoNothing({
+      target: [recadoCurtidas.recadoId, recadoCurtidas.autorId],
+    })
+    .returning();
+  return row ?? null;
+}
+
+export async function removerCurtidaDoRecado(id: string, autorId: string) {
+  await db
+    .delete(recadoCurtidas)
+    .where(and(eq(recadoCurtidas.recadoId, id), eq(recadoCurtidas.autorId, autorId)));
+}
+
+export async function marcarRecadosComoLidos(ids: string[], perfilId: string) {
+  if (ids.length === 0) return [];
+  const atualizados = await db
+    .update(recados)
+    .set({ lidoEm: new Date() })
+    .where(
+      and(
+        inArray(recados.id, ids),
+        ne(recados.autorId, perfilId),
+        isNull(recados.lidoEm),
+      ),
+    )
+    .returning({ id: recados.id });
+  return atualizados.map((row) => row.id);
 }
 
 export async function listarEventos() {

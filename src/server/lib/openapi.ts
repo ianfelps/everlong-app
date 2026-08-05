@@ -111,7 +111,10 @@ export const openapiSpec = {
       },
       Recado: {
         type: 'object',
-        required: ['id', 'autorId', 'conteudo', 'cor', 'createdAt'],
+        required: [
+          'id', 'autorId', 'conteudo', 'cor', 'createdAt', 'fixadoEm',
+          'lidoEm', 'curtidas', 'curtidoPorMim',
+        ],
         properties: {
           id: { type: 'string', format: 'uuid' },
           autorId: { type: 'string', format: 'uuid' },
@@ -119,6 +122,10 @@ export const openapiSpec = {
           cor: { type: 'string' },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
+          fixadoEm: { type: 'string', format: 'date-time', nullable: true },
+          lidoEm: { type: 'string', format: 'date-time', nullable: true },
+          curtidas: { type: 'integer', minimum: 0 },
+          curtidoPorMim: { type: 'boolean' },
         },
       },
       Cronometro: {
@@ -126,6 +133,8 @@ export const openapiSpec = {
         required: [
           'data_inicio', 'anos', 'meses', 'dias',
           'horas', 'minutos', 'segundos', 'total_dias', 'total_segundos',
+          'total_fotos', 'total_eventos', 'total_capsulas_abertas',
+          'total_filmes_assistidos', 'total_recados',
         ],
         properties: {
           data_inicio: { type: 'string', format: 'date-time' },
@@ -137,6 +146,11 @@ export const openapiSpec = {
           segundos: { type: 'integer' },
           total_dias: { type: 'integer' },
           total_segundos: { type: 'integer' },
+          total_fotos: { type: 'integer' },
+          total_eventos: { type: 'integer' },
+          total_capsulas_abertas: { type: 'integer' },
+          total_filmes_assistidos: { type: 'integer' },
+          total_recados: { type: 'integer' },
         },
       },
       Filme: {
@@ -624,17 +638,27 @@ export const openapiSpec = {
     '/api/recados': {
       get: {
         tags: ['recados'],
-        summary: 'Até 8 recados criados nos últimos 7 dias',
+        summary: 'Mural atual ou arquivo paginado de recados antigos',
         security: [{ cookieAuth: [] }],
         parameters: [
           {
-            name: 'order',
+            name: 'scope',
             in: 'query',
-            schema: { type: 'string', enum: ['desc', 'asc'], default: 'desc' },
+            schema: { type: 'string', enum: ['current', 'archive'], default: 'current' },
+          },
+          {
+            name: 'limit',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 50, default: 20 },
+          },
+          {
+            name: 'cursor',
+            in: 'query',
+            schema: { type: 'string' },
           },
         ],
         responses: {
-          200: { description: 'Lista', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Recado' } } } } },
+          200: { description: 'Lista atual ou página do arquivo', content: { 'application/json': { schema: { oneOf: [{ type: 'array', items: { $ref: '#/components/schemas/Recado' } }, { type: 'object', required: ['items', 'next_cursor'], properties: { items: { type: 'array', items: { $ref: '#/components/schemas/Recado' } }, next_cursor: { type: 'string', nullable: true } } }] } } } },
         },
       },
       post: {
@@ -667,12 +691,64 @@ export const openapiSpec = {
       patch: {
         tags: ['recados'],
         security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  conteudo: { type: 'string' },
+                  cor: { type: 'string' },
+                  fixado: { type: 'boolean' },
+                },
+              },
+            },
+          },
+        },
         responses: { 200: { description: 'Atualizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Recado' } } } }, 404: { $ref: '#/components/responses/NotFound' } },
       },
       delete: {
         tags: ['recados'],
         security: [{ cookieAuth: [] }],
         responses: { 204: { $ref: '#/components/responses/NoContent' }, 404: { $ref: '#/components/responses/NotFound' } },
+      },
+    },
+    '/api/recados/{id}/curtida': {
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+      ],
+      put: {
+        tags: ['recados'],
+        summary: 'Adiciona o coração do perfil atual',
+        security: [{ cookieAuth: [] }],
+        responses: { 204: { $ref: '#/components/responses/NoContent' } },
+      },
+      delete: {
+        tags: ['recados'],
+        summary: 'Remove o coração do perfil atual',
+        security: [{ cookieAuth: [] }],
+        responses: { 204: { $ref: '#/components/responses/NoContent' } },
+      },
+    },
+    '/api/recados/lidos': {
+      post: {
+        tags: ['recados'],
+        summary: 'Marca como lidos os recados visíveis ao perfil atual',
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['ids'],
+                properties: { ids: { type: 'array', items: { type: 'string', format: 'uuid' } } },
+              },
+            },
+          },
+        },
+        responses: { 200: { description: 'IDs marcados como lidos' } },
       },
     },
     '/api/filmes': {

@@ -20,6 +20,11 @@ export const configCasal = pgTable(
     dataInicio: timestamp('data_inicio', { withTimezone: true }).notNull(),
     cartaSecreta: text('carta_secreta'),
     spotifyPlaylistId: text('spotify_playlist_id'),
+    totalFotos: integer('total_fotos').notNull().default(0),
+    totalEventos: integer('total_eventos').notNull().default(0),
+    totalCapsulasAbertas: integer('total_capsulas_abertas').notNull().default(0),
+    totalFilmesAssistidos: integer('total_filmes_assistidos').notNull().default(0),
+    totalRecados: integer('total_recados').notNull().default(0),
   },
   (t) => [check('chk_config_singleton', sql`${t.id} = true`)],
 );
@@ -132,8 +137,33 @@ export const recados = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
+    fixadoEm: timestamp('fixado_em', { withTimezone: true }),
+    lidoEm: timestamp('lido_em', { withTimezone: true }),
   },
-  (t) => [index('idx_recados_created').on(sql`${t.createdAt} desc`)],
+  (t) => [
+    index('idx_recados_created').on(sql`${t.createdAt} desc`),
+    index('idx_recados_fixados').on(sql`${t.fixadoEm} desc nulls last`),
+  ],
+);
+
+export const recadoCurtidas = pgTable(
+  'recado_curtidas',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    recadoId: uuid('recado_id')
+      .notNull()
+      .references(() => recados.id, { onDelete: 'cascade' }),
+    autorId: uuid('autor_id')
+      .notNull()
+      .references(() => perfis.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    unique('uq_curtida_recado_autor').on(t.recadoId, t.autorId),
+    index('idx_curtidas_recado').on(t.recadoId),
+  ],
 );
 
 export const filmes = pgTable(
@@ -247,6 +277,8 @@ export type CapsulaFoto = typeof capsulaFotos.$inferSelect;
 export type NovaCapsulaFoto = typeof capsulaFotos.$inferInsert;
 export type Recado = typeof recados.$inferSelect;
 export type NovoRecado = typeof recados.$inferInsert;
+export type RecadoCurtida = typeof recadoCurtidas.$inferSelect;
+export type NovaRecadoCurtida = typeof recadoCurtidas.$inferInsert;
 export type Filme = typeof filmes.$inferSelect;
 export type NovoFilme = typeof filmes.$inferInsert;
 export type FilmeAvaliacao = typeof filmeAvaliacoes.$inferSelect;

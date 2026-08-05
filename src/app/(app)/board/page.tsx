@@ -1,13 +1,13 @@
 import { readSession } from '@/server/lib/session';
-import { listarRecados, mapaPerfis } from '@/server/queries';
+import { listarRecadosDoMural, mapaPerfis } from '@/server/queries';
 import { Board } from '@/components/board/Board';
 
 export const dynamic = 'force-dynamic';
 
 export default async function BoardPage() {
-  const [session, rows, perfilNome] = await Promise.all([
-    readSession(),
-    listarRecados(),
+  const session = await readSession();
+  const [rows, perfilNome] = await Promise.all([
+    session ? listarRecadosDoMural(session.perfilId) : [],
     mapaPerfis(),
   ]);
 
@@ -17,6 +17,10 @@ export default async function BoardPage() {
     cor: r.cor,
     autorId: r.autorId,
     createdAt: r.createdAt.toISOString(),
+    fixadoEm: r.fixadoEm?.toISOString() ?? null,
+    lidoEm: r.lidoEm?.toISOString() ?? null,
+    curtidas: r.curtidas,
+    curtidoPorMim: r.curtidoPorMim,
   }));
 
   const perfis = Object.fromEntries(perfilNome);

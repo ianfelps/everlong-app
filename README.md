@@ -8,11 +8,11 @@
 
 - **Landing** — apresentação do app com a identidade visual e CTA de entrada.
 - **Login por perfil** — dois perfis pré-criados (o casal); login = escolher perfil + senha.
-- **Dashboard** — cronômetro de namoro ao vivo (anos→segundos), fotos recentes, últimos recados e próxima cápsula.
+- **Dashboard** — cronômetro de namoro ao vivo (anos→segundos), resumo de todas as memórias, fotos recentes, últimos recados e próxima cápsula.
 - **Álbum** — grid masonry, upload com legenda/data, lightbox com editar/excluir. Binários no Google Drive, metadados no Postgres.
 - **Linha do tempo** — marcos da relação alternando lados, criar/editar/excluir evento.
 - **Cápsula do tempo** — mensagens bloqueadas até uma data futura. O conteúdo nunca trafega antes do desbloqueio (`423 Locked`).
-- **Mural de recados** — até 8 post-its dos últimos 7 dias, com atualização ao vivo via polling (~10s) entre os dois perfis.
+- **Mural de recados** — até 4 bilhetes fixados e 7 recentes, corações, confirmação de leitura, arquivo paginado e atualização ao vivo via polling (~10s) entre os dois perfis.
 
 ---
 
@@ -96,6 +96,8 @@ SESSION_SECRET=          # openssl rand -hex 32
 ### 3. Banco
 
 Rode as migrations versionadas com `pnpm db:migrate`. Alternativa em dev: `pnpm db:push`.
+
+A migration mais recente preenche e mantém os contadores do resumo da home diretamente no banco.
 
 Se o banco ja recebeu a `0000_init.sql` manualmente e voce quer continuar usando migrations versionadas, rode uma vez:
 
@@ -196,7 +198,9 @@ pnpm drive:init   # cria a pasta raiz no Drive
 | GET/POST · PATCH/DELETE | `/api/eventos` · `/api/eventos/:id` | Linha do tempo |
 | GET/POST | `/api/capsulas` | Metadata-only na listagem |
 | GET/DELETE | `/api/capsulas/:id` | Leitura dá **423** antes do desbloqueio; exclusão exige abertura prévia |
-| GET/POST · PATCH/DELETE | `/api/recados` · `/api/recados/:id` | Mural; listagem limitada aos 8 recados dos últimos 7 dias |
+| GET/POST · PATCH/DELETE | `/api/recados` · `/api/recados/:id` | Mural; 4 fixados + 7 recentes e arquivo paginado de recados antigos |
+| PUT/DELETE | `/api/recados/:id/curtida` | Adiciona/remove o coração do perfil atual |
+| POST | `/api/recados/lidos` | Marca como lidos os recados visíveis enviados pelo cliente |
 
 ---
 
