@@ -43,6 +43,20 @@
       "when": 1781797627619,
       "tag": "0005_soft_tomorrow_man",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785893725811,
+      "tag": "0006_brave_microchip",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785895271750,
+      "tag": "0007_outgoing_molten_man",
+      "breakpoints": true
     }
   ]
 }

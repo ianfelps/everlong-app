@@ -1,4 +1,6 @@
 export const RECADO_LIMITE = 8;
+export const RECADO_FIXADO_LIMITE = 4;
+export const RECADO_RECENTE_LIMITE = 7;
 export const RECADO_DURACAO_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function inicioJanelaRecados(agora: Date = new Date()): Date {

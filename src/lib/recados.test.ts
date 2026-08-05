@@ -3,7 +3,9 @@ import {
   inicioJanelaRecados,
   limitarRecados,
   RECADO_DURACAO_MS,
+  RECADO_FIXADO_LIMITE,
   RECADO_LIMITE,
+  RECADO_RECENTE_LIMITE,
 } from './recados';
 
 describe('política de recados', () => {
@@ -29,5 +31,10 @@ describe('política de recados', () => {
     expect(limitarRecados(recados, 'asc')).toEqual(
       recados.slice(-RECADO_LIMITE),
     );
+  });
+
+  it('reserva quatro posições para fixados e sete para recados recentes', () => {
+    expect(RECADO_FIXADO_LIMITE).toBe(4);
+    expect(RECADO_RECENTE_LIMITE).toBe(7);
   });
 });

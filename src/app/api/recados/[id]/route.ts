@@ -5,12 +5,14 @@ import { db } from '@/server/db';
 import { recados } from '@/server/db/schema';
 import { errors, handle } from '@/server/lib/http';
 import { requireSession } from '@/server/lib/session';
+import { definirRecadoFixado, obterRecadoComEstado } from '@/server/queries';
 
 export const runtime = 'nodejs';
 
 const patchSchema = z.object({
   conteudo: z.string().min(1).max(2000).optional(),
   cor: z.string().max(40).optional(),
+  fixado: z.boolean().optional(),
 });
 
 export async function PATCH(
@@ -18,12 +20,21 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   return handle(async () => {
-    await requireSession();
+    const session = await requireSession();
     const { id } = await params;
     const body = patchSchema.parse(await req.json());
-    const patch: Record<string, unknown> = {};
+    if (body.fixado !== undefined) {
+      if (body.conteudo !== undefined || body.cor !== undefined) {
+        throw errors.badRequest('fixação deve ser atualizada separadamente');
+      }
+      await definirRecadoFixado(id, body.fixado);
+      return obterRecadoComEstado(id, session.perfilId);
+    }
+
+    const patch: { conteudo?: string; cor?: string } = {};
     if (body.conteudo !== undefined) patch.conteudo = body.conteudo;
     if (body.cor !== undefined) patch.cor = body.cor;
+    if (Object.keys(patch).length === 0) throw errors.badRequest('nenhuma alteração informada');
 
     const [row] = await db
       .update(recados)
@@ -31,7 +42,7 @@ export async function PATCH(
       .where(eq(recados.id, id))
       .returning();
     if (!row) throw errors.notFound('recado não encontrado');
-    return row;
+    return obterRecadoComEstado(id, session.perfilId);
   });
 }
 

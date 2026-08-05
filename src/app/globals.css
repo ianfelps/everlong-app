@@ -542,6 +542,16 @@
     align-items: center;
     gap: 10px;
   }
+  .timer-summary {
+    max-width: 680px;
+    color: var(--ink-dim);
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .timer-summary b {
+    color: var(--ink);
+    font-weight: 600;
+  }
 
   .dash-cols {
     display: grid;
@@ -1458,6 +1468,11 @@
     transition: transform 0.18s;
     position: relative;
   }
+  .postit.is-pinned {
+    box-shadow: 0 0 0 2px rgba(217, 38, 44, 0.55),
+      0 14px 26px -12px rgba(0, 0, 0, 0.6),
+      0 1px 0 rgba(255, 255, 255, 0.35) inset;
+  }
   .postit:hover {
     transform: scale(1.04) rotate(0deg) !important;
     z-index: 6;
@@ -1482,6 +1497,33 @@
     flex: 1;
     font-family: var(--font-sans);
   }
+  .postit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+    min-height: 24px;
+    margin: -8px -8px 8px;
+  }
+  .postit-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    border: 0;
+    border-radius: 6px;
+    padding: 4px 5px;
+    color: rgba(26, 18, 8, 0.65);
+    background: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+  }
+  .postit-action:hover,
+  .postit-action.is-active {
+    color: #981b1f;
+    background: rgba(255, 255, 255, 0.55);
+  }
+  .postit-action span {
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
   .postit-foot {
     display: flex;
     justify-content: space-between;
@@ -1490,6 +1532,29 @@
     font-family: var(--font-mono);
     font-size: 11px;
     opacity: 0.7;
+  }
+  .postit-seen {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 7px;
+    color: rgba(26, 18, 8, 0.62);
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .board-error {
+    margin: 0 0 14px;
+    color: #ff9b9e;
+    font-size: 13px;
+  }
+  .board-archive {
+    margin-top: 40px;
+  }
+  .board-archive .section-h {
+    align-items: end;
+  }
+  .board-archive-flow {
+    margin-top: 20px;
   }
   .postit-add {
     width: 200px;
@@ -1553,6 +1618,7 @@
     cursor: pointer;
     border: 2px solid transparent;
     transition: 0.15s;
+    padding: 0;
   }
   .swatch.on {
     border-color: #fff;

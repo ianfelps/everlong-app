@@ -17,6 +17,11 @@ export type CronometroResposta = {
   segundos: number;
   total_dias: number;
   total_segundos: number;
+  total_fotos: number;
+  total_eventos: number;
+  total_capsulas_abertas: number;
+  total_filmes_assistidos: number;
+  total_recados: number;
 };
 
 export async function calcularCronometro(
@@ -37,6 +42,11 @@ export async function calcularCronometro(
       segundos: 0,
       total_dias: 0,
       total_segundos: 0,
+      total_fotos: cfg.totalFotos,
+      total_eventos: cfg.totalEventos,
+      total_capsulas_abertas: cfg.totalCapsulasAbertas,
+      total_filmes_assistidos: cfg.totalFilmesAssistidos,
+      total_recados: cfg.totalRecados,
     };
   }
 
@@ -52,5 +62,10 @@ export async function calcularCronometro(
     segundos: dur.seconds ?? 0,
     total_dias: differenceInDays(agora, inicio),
     total_segundos: differenceInSeconds(agora, inicio),
+    total_fotos: cfg.totalFotos,
+    total_eventos: cfg.totalEventos,
+    total_capsulas_abertas: cfg.totalCapsulasAbertas,
+    total_filmes_assistidos: cfg.totalFilmesAssistidos,
+    total_recados: cfg.totalRecados,
   };
 }
