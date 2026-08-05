@@ -1450,13 +1450,14 @@
     animation: pulseGlow 1.8s infinite;
   }
   .postit-flow {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-auto-rows: 8px;
     gap: 22px;
     align-items: flex-start;
   }
   .postit {
-    width: 200px;
+    width: 100%;
     min-height: 200px;
     padding: 20px 18px 16px;
     border-radius: 3px;
@@ -1577,12 +1578,8 @@
     background: rgba(217, 38, 44, 0.05);
   }
   .composer {
-    position: fixed;
-    bottom: 26px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 60;
-    width: min(560px, 92vw);
+    width: min(560px, 100%);
+    margin: 32px auto 0;
     display: flex;
     gap: 10px;
     padding: 12px;
@@ -2687,6 +2684,9 @@
   .masonry {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .postit-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .page-loading-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2801,12 +2801,10 @@
   }
   .postit-flow {
     gap: 16px;
-    justify-content: center;
   }
   
   .composer {
-    width: calc(100vw - 20px);
-    bottom: 14px;
+    width: 100%;
     gap: 8px;
     padding: 10px;
   }
@@ -2814,6 +2812,9 @@
 
 @media (max-width: 560px) {
   .masonry {
+    grid-template-columns: 1fr;
+  }
+  .postit-flow {
     grid-template-columns: 1fr;
   }
   .page-loading-grid {

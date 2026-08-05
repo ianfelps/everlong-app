@@ -31,6 +31,8 @@ type ArquivoResposta = {
 type LeituraResposta = { ids: string[] };
 
 const POLL_MS = 10_000;
+const BOARD_GRID_ROW = 8;
+const BOARD_GRID_GAP = 22;
 const rndRot = () => Math.round(Math.random() * 8 - 4);
 
 function comRotacao(rows: RecadoRow[], anteriores: RecadoView[]) {
@@ -60,6 +62,7 @@ export function Board({
   const [text, setText] = useState('');
   const [cor, setCor] = useState(CORES_RECADO[0]!.nome);
   const [error, setError] = useState<string | null>(null);
+  const [noteSpans, setNoteSpans] = useState<Record<string, number>>({});
   const conhecidos = useRef(new Set(inicial.map((note) => note.id)));
   const boardRef = useRef<HTMLDivElement>(null);
   const leiturasPendentes = useRef(new Set<string>());
@@ -138,6 +141,40 @@ export function Board({
     },
     [],
   );
+
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+
+    const measure = (note: HTMLElement) => {
+      const id = note.getAttribute('data-recado-id');
+      const grid = note.parentElement;
+      if (!id || !grid) return;
+
+      const styles = window.getComputedStyle(grid);
+      const rowGap = parseFloat(styles.rowGap) || BOARD_GRID_GAP;
+      const rowHeight = parseFloat(styles.gridAutoRows) || BOARD_GRID_ROW;
+      const span = Math.max(
+        1,
+        Math.ceil((note.offsetHeight + rowGap) / (rowHeight + rowGap)),
+      );
+
+      setNoteSpans((prev) => (prev[id] === span ? prev : { ...prev, [id]: span }));
+    };
+
+    const observer = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.target instanceof HTMLElement) measure(entry.target);
+      });
+    });
+    const notes = board.querySelectorAll<HTMLElement>('[data-recado-id]');
+    notes.forEach((note) => {
+      measure(note);
+      observer.observe(note);
+    });
+
+    return () => observer.disconnect();
+  }, [archive, notes]);
 
   async function colar() {
     const conteudo = text.trim();
@@ -248,7 +285,11 @@ export function Board({
         data-recado-id={note.id}
         data-autor-id={note.autorId}
         data-lido-em={note.lidoEm ?? ''}
-        style={{ background: hexDaCor(note.cor), transform: `rotate(${note.rotacao}deg)` }}
+        style={{
+          background: hexDaCor(note.cor),
+          gridRowEnd: `span ${noteSpans[note.id] ?? 8}`,
+          transform: `rotate(${note.rotacao}deg)`,
+        }}
       >
         <div className="postit-actions">
           <button
@@ -286,7 +327,7 @@ export function Board({
   }
 
   return (
-    <div className="page shell fade-in" style={{ paddingBottom: 120 }} ref={boardRef}>
+    <div className="page shell fade-in" ref={boardRef}>
       <div className="page-head">
         <h1 className="page-title">Mural de recados</h1>
         <p className="page-sub">
@@ -308,6 +349,33 @@ export function Board({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="composer">
+        <div className="swatches" aria-label="Cor do recado">
+          {CORES_RECADO.map((item) => (
+            <button
+              key={item.nome}
+              className={`swatch ${item.nome === cor ? 'on' : ''}`}
+              type="button"
+              style={{ background: item.hex }}
+              onClick={() => setCor(item.nome)}
+              aria-label={`Usar a cor ${item.nome}`}
+              aria-pressed={item.nome === cor}
+            />
+          ))}
+        </div>
+        <input
+          placeholder="Escreva um bilhete rápido…"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') void colar();
+          }}
+        />
+        <button className="btn btn-primary composer-send" type="button" onClick={() => void colar()}>
+          <Send size={16} /> <span className="btn-label">Colar</span>
+        </button>
       </div>
 
       <section className="board-archive">
@@ -340,32 +408,6 @@ export function Board({
         )}
       </section>
 
-      <div className="composer">
-        <div className="swatches" aria-label="Cor do recado">
-          {CORES_RECADO.map((item) => (
-            <button
-              key={item.nome}
-              className={`swatch ${item.nome === cor ? 'on' : ''}`}
-              type="button"
-              style={{ background: item.hex }}
-              onClick={() => setCor(item.nome)}
-              aria-label={`Usar a cor ${item.nome}`}
-              aria-pressed={item.nome === cor}
-            />
-          ))}
-        </div>
-        <input
-          placeholder="Escreva um bilhete rápido…"
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') void colar();
-          }}
-        />
-        <button className="btn btn-primary composer-send" type="button" onClick={() => void colar()}>
-          <Send size={16} /> <span className="btn-label">Colar</span>
-        </button>
-      </div>
     </div>
   );
 }
