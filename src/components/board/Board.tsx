@@ -338,9 +338,6 @@ export function Board({
       {error && <p className="board-error" role="alert">{error}</p>}
 
       <div className="board-canvas">
-        <div className="board-live">
-          <span className="live-dot" /> ao vivo
-        </div>
         <div className="postit-flow">
           {notes.map(renderRecado)}
           {notes.length === 0 && (

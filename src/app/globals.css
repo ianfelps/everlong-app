@@ -1427,28 +1427,6 @@
       linear-gradient(180deg, var(--surface-2), var(--petrol-900));
     overflow: hidden;
   }
-  .board-live {
-    position: absolute;
-    top: 18px;
-    right: 22px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-dim);
-    z-index: 5;
-  }
-  .live-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #8be04e;
-    box-shadow: 0 0 10px #8be04e;
-    animation: pulseGlow 1.8s infinite;
-  }
   .postit-flow {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -2795,10 +2773,6 @@
     padding: 18px 14px;
     min-height: 420px;
   }
-  .board-live {
-    top: 12px;
-    right: 14px;
-  }
   .postit-flow {
     gap: 16px;
   }
@@ -2816,6 +2790,10 @@
   }
   .postit-flow {
     grid-template-columns: 1fr;
+  }
+  .postit {
+    width: min(240px, 100%);
+    justify-self: center;
   }
   .page-loading-grid {
     grid-template-columns: 1fr;
