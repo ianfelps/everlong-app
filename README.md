@@ -143,20 +143,13 @@ pnpm dev
 
 ---
 
-## Deploy (Render — grátis)
+## Deploy (VPS)
 
-O app roda como servidor Node (não serverless), então não esbarra no limite de body de 4.5 MB nem em problemas com módulos nativos.
+O app roda em um container Docker na VPS, com Nginx no host fazendo o proxy reverso e o TLS. O banco continua no Supabase; não há banco, migration ou seed no Compose.
 
-1. Push do repo para o GitHub.
-2. Render → **New → Blueprint** (lê o `render.yaml`) ou **New → Web Service** manual:
-   - Build: `pnpm install --frozen-lockfile && pnpm build`
-   - Start: `pnpm start` (o Next lê `$PORT`)
-3. Em **Environment**, defina as 6 variáveis do `.env.local`.
-4. Deploy. Health check em `/api/health`.
+Após uma pull request de `development` para `main` ser mesclada, o GitHub Actions valida o projeto, publica a imagem no GitHub Container Registry e atualiza o container por SSH.
 
-> Plano free dorme após ~15 min de inatividade (cold start ~40s na 1ª visita).
->
-> **Vercel não é recomendada**: funções serverless têm limite de **4.5 MB** no body → uploads de foto maiores quebram. No Render não há esse limite.
+O provisionamento inicial da VPS, DNS, Nginx, HTTPS, segredos do GitHub e procedimento de rollback estão em [`docs/deploy-vps.md`](./docs/deploy-vps.md).
 
 ---
 
