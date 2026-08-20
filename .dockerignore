@@ -1,0 +1,13 @@
+.env
+.env.*
+.git
+.github
+.next
+.design_tmp
+node_modules
+coverage
+out
+dist
+*.log
+README.md
+render.yaml
