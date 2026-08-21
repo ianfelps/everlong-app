@@ -237,22 +237,9 @@ export const openapiSpec = {
       },
       Health: {
         type: 'object',
-        required: ['status', 'uptime_seconds', 'timestamp', 'checks'],
+        required: ['status'],
         properties: {
-          status: { type: 'string', enum: ['ok', 'degraded'] },
-          uptime_seconds: { type: 'integer' },
-          timestamp: { type: 'string', format: 'date-time' },
-          checks: {
-            type: 'object',
-            additionalProperties: {
-              type: 'object',
-              properties: {
-                ok: { type: 'boolean' },
-                latency_ms: { type: 'integer' },
-                error: { type: 'string' },
-              },
-            },
-          },
+          status: { type: 'string', enum: ['ok', 'unhealthy'] },
         },
       },
     },
@@ -283,7 +270,7 @@ export const openapiSpec = {
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Health' } } },
           },
           503: {
-            description: 'degraded',
+            description: 'unhealthy',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Health' } } },
           },
         },
