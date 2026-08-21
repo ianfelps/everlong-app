@@ -178,7 +178,7 @@ pnpm drive:init   # cria a pasta raiz no Drive
 
 | Método | Path | Descrição |
 |---|---|---|
-| GET  | `/api/health` | Status + ping DB |
+| GET  | `/api/health` | Status do serviço |
 | GET  | `/api/docs` / `/api/openapi` | Swagger UI / spec |
 | POST | `/api/auth/login` | `{perfil_id, senha}` → cookie `evl_session` |
 | POST | `/api/auth/logout` | Limpa cookie |
