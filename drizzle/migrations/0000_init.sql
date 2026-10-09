@@ -107,12 +107,7 @@ create trigger trg_config_updated
   for each row execute function set_updated_at();
 
 -- =========================================================
--- Supabase Realtime: habilita stream em recados
--- =========================================================
-alter publication supabase_realtime add table "recados";
-
--- =========================================================
--- RLS: API usa service_role (bypass). Defesa em profundidade.
+-- RLS: API uses the table owner. Defense in depth.
 -- =========================================================
 alter table "config_casal" enable row level security;
 alter table "perfis"       enable row level security;

@@ -23,7 +23,7 @@
 | Framework | Next.js 15 (App Router, RSC + Route Handlers em Node runtime) |
 | Linguagem | TypeScript |
 | Estilo | Tailwind CSS v4 (tokens em `@theme`) + ícones lucide-react |
-| Banco | PostgreSQL (Supabase) |
+| Banco | PostgreSQL |
 | ORM | DrizzleORM + driver `postgres` |
 | Mídia | Google Drive via OAuth pessoal (`googleapis`) — arquivos na sua conta |
 | Auth | argon2id + JWT HS256 (`jose`) em cookie HttpOnly |
@@ -72,7 +72,7 @@ scripts/
 
 ### 1. Pré-requisitos
 - Node.js 20+ e pnpm
-- Conta no [Supabase](https://supabase.com) (Postgres)
+- Instancia PostgreSQL 17
 - Conta Google + projeto no [Google Cloud](https://console.cloud.google.com) com Drive API habilitada
 
 ### 2. Variáveis de ambiente
@@ -85,7 +85,7 @@ cp .env.example .env.local
 `.env.local`:
 
 ```
-DATABASE_URL=postgres://postgres.xxxxx:<SENHA_URL_ENCODED>@aws-0-xxx.pooler.supabase.com:5432/postgres
+DATABASE_URL=postgres://everlong_app:CHANGE_ME@database:5432/everlong
 GOOGLE_OAUTH_CLIENT_ID=
 GOOGLE_OAUTH_CLIENT_SECRET=
 GOOGLE_OAUTH_REFRESH_TOKEN=
@@ -145,7 +145,7 @@ pnpm dev
 
 ## Deploy (VPS)
 
-O app roda em um container Docker na VPS, com Nginx no host fazendo o proxy reverso e o TLS. O banco continua no Supabase; não há banco, migration ou seed no Compose.
+O app roda em um container Docker na VPS, com Nginx no host fazendo o proxy reverso e o TLS. O PostgreSQL roda em um container privado separado e migrations sao aplicadas antes de cada deploy.
 
 Após uma pull request de `development` para `main` ser mesclada, o GitHub Actions valida o projeto, publica a imagem no GitHub Container Registry e atualiza o container por SSH.
 
