@@ -69,6 +69,15 @@ jobs:
             ghcr.io/${{ github.repository }}:${{ github.sha }}
             ghcr.io/${{ github.repository }}:latest
 
+      - name: Build and publish migrations image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/arm64
+          target: migrations
+          tags: ghcr.io/${{ github.repository }}-migrations:${{ github.sha }}
+
       - name: Upload Compose configuration
         uses: appleboy/scp-action@v1
         with:
@@ -85,17 +94,21 @@ jobs:
           APP_IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USERNAME: ${{ github.actor }}
+          MIGRATIONS_IMAGE: ghcr.io/${{ github.repository }}-migrations:${{ github.sha }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          envs: APP_IMAGE,GHCR_TOKEN,GHCR_USERNAME
+          envs: APP_IMAGE,GHCR_TOKEN,GHCR_USERNAME,MIGRATIONS_IMAGE
           script: |
             set -eu
             cd /opt/everlong
             printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
-            APP_IMAGE="$APP_IMAGE" docker compose --env-file .env.production pull
-            APP_IMAGE="$APP_IMAGE" docker compose --env-file .env.production up -d --remove-orphans --wait --wait-timeout 90
+            APP_IMAGE="$APP_IMAGE" MIGRATIONS_IMAGE="$MIGRATIONS_IMAGE" docker compose --env-file .env.production pull
             docker logout ghcr.io
+            MIGRATIONS_IMAGE="$MIGRATIONS_IMAGE" docker compose --env-file .env.production run --rm --interactive=false migrations
+            APP_IMAGE="$APP_IMAGE" MIGRATIONS_IMAGE="$MIGRATIONS_IMAGE" docker compose --env-file .env.production up -d --remove-orphans --wait --wait-timeout 90 app
+            printf 'APP_IMAGE=%s\nMIGRATIONS_IMAGE=%s\n' "$APP_IMAGE" "$MIGRATIONS_IMAGE" > .deployment.env
+            chmod 600 .deployment.env
             docker image prune --force

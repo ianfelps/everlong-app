@@ -6,6 +6,9 @@ services:
       - .env.production
     ports:
       - '127.0.0.1:3000:3000'
+    networks:
+      - default
+      - database
     healthcheck:
       test:
         - CMD
@@ -16,3 +19,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
+  migrations:
+    image: ${MIGRATIONS_IMAGE:?MIGRATIONS_IMAGE must be set}
+    env_file:
+      - .env.production
+    networks:
+      - database
+
+networks:
+  database:
+    external: true
+    name: everlong-database

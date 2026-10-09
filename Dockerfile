@@ -27,6 +27,14 @@ RUN NODE_ENV=production \
     SESSION_SECRET=0123456789abcdef0123456789abcdef \
     pnpm build
 
+FROM dependencies AS migrations
+
+WORKDIR /app
+
+COPY . .
+
+CMD ["pnpm", "db:migrate"]
+
 FROM node:20-bookworm-slim AS runner
 
 WORKDIR /app
