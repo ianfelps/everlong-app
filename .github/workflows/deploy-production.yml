@@ -109,4 +109,6 @@ jobs:
             docker logout ghcr.io
             MIGRATIONS_IMAGE="$MIGRATIONS_IMAGE" docker compose --env-file .env.production run --rm --interactive=false migrations
             APP_IMAGE="$APP_IMAGE" MIGRATIONS_IMAGE="$MIGRATIONS_IMAGE" docker compose --env-file .env.production up -d --remove-orphans --wait --wait-timeout 90 app
+            printf 'APP_IMAGE=%s\nMIGRATIONS_IMAGE=%s\n' "$APP_IMAGE" "$MIGRATIONS_IMAGE" > .deployment.env
+            chmod 600 .deployment.env
             docker image prune --force
